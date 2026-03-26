@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>⚽ Fútbol 5 — Admin</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#080c08;--bg2:#0e1510;--card:#13191a;
+  --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.13);
+  --text:#e8ede8;--muted:#5a6e5a;--muted2:#7a917a;
+  --grass:#2d9e52;--grass-l:#3dbb63;--grass-dim:#1e6e38;
+  --danger:#ef4444;--danger-bg:rgba(239,68,68,0.08);
+  --success-bg:rgba(45,158,82,0.1);--warn-bg:rgba(245,158,11,0.08);
+  --amber:#f59e0b;
+  --r:10px;--r-sm:7px;--r-lg:14px;
+}
+body{font-family:'Syne',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-thumb{background:#2a3a2a;border-radius:2px}
+
+/* LOGIN */
+.login-screen{position:fixed;inset:0;background:var(--bg);z-index:999;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 20px}
+.login-logo-row{display:flex;align-items:center;gap:10px;margin-bottom:4px}
+.login-ball{width:44px;height:44px;border-radius:11px;background:var(--amber);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+.login-logo-txt{font-size:20px;font-weight:800;color:var(--text)}
+.login-sub{font-size:10px;color:var(--muted);font-family:'DM Mono',monospace;letter-spacing:1px;margin-bottom:32px;text-align:center}
+.login-card{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--r-lg);padding:28px;width:100%;max-width:340px}
+.login-card h2{font-size:16px;font-weight:800;margin-bottom:4px}
+.login-card p{font-size:12px;color:var(--muted2);font-family:'DM Mono',monospace;margin-bottom:18px}
+.login-lbl{font-size:11px;color:var(--muted2);font-family:'DM Mono',monospace;margin-bottom:4px;display:block}
+.login-input{background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:var(--r-sm);padding:11px 14px;color:var(--text);font-family:'Syne',sans-serif;font-size:14px;font-weight:600;width:100%;outline:none;transition:border-color .2s;margin-bottom:12px}
+.login-input:focus{border-color:var(--amber)}
+.login-btn{width:100%;background:var(--amber);border:none;border-radius:var(--r-sm);padding:12px;color:#000;font-size:14px;font-weight:800;font-family:'Syne',sans-serif;cursor:pointer;transition:opacity .18s}
+.login-btn:hover{opacity:.88}
+
+/* HEADER */
+.header{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 20px;position:sticky;top:0;z-index:100}
+.header-inner{max-width:1200px;margin:0 auto;display:flex;align-items:center;gap:12px;height:56px}
+.logo{display:flex;align-items:center;gap:9px;text-decoration:none;cursor:pointer}
+.logo-ball{width:34px;height:34px;border-radius:8px;background:var(--amber);display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
+.logo-text{font-size:15px;font-weight:800;color:var(--text);letter-spacing:-0.3px;line-height:1}
+.logo-sub{font-size:10px;color:var(--muted2);font-family:'DM Mono',monospace;margin-top:2px}
+.admin-badge{padding:3px 10px;border-radius:12px;background:rgba(245,158,11,0.12);border:1px solid rgba(245,158,11,0.3);color:#fcd34d;font-size:10px;font-weight:700;font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:.5px}
+.hgap{flex:1}
+.rt-badge{display:flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;font-size:11px;font-family:'DM Mono',monospace;border:1px solid;transition:all .4s}
+.rt-badge.ok{background:rgba(45,158,82,0.1);border-color:rgba(45,158,82,0.25);color:#6ee49a}
+.rt-badge.wait{background:var(--warn-bg);border-color:rgba(245,158,11,0.25);color:#fcd34d}
+.rt-badge.err{background:var(--danger-bg);border-color:rgba(239,68,68,0.25);color:#fca5a5}
+.rt-dot{width:6px;height:6px;border-radius:50%}
+.rt-badge.ok .rt-dot{background:#3dbb63;animation:blink 2s infinite}
+.rt-badge.wait .rt-dot{background:#f59e0b;animation:blink .6s infinite}
+.rt-badge.err .rt-dot{background:#ef4444}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.btn-logout{padding:6px 13px;border-radius:var(--r-sm);font-size:12px;font-weight:700;font-family:'Syne',sans-serif;cursor:pointer;border:1px solid var(--border2);background:transparent;color:var(--muted2);transition:all .2s}
+.btn-logout:hover{color:var(--danger);border-color:rgba(239,68,68,0.3)}
+
+/* LAYOUT */
+.layout{display:flex;min-height:calc(100vh - 56px);max-width:1200px;margin:0 auto}
+.sidebar{width:320px;flex-shrink:0;border-right:1px solid var(--border);padding:20px;display:flex;flex-direction:column;gap:16px;overflow-y:auto;max-height:calc(100vh - 56px);position:sticky;top:56px}
+.content-area{flex:1;padding:22px 20px 80px;overflow-y:auto}
+
+/* SIDEBAR FORMS */
+.section-title{font-size:11px;font-weight:700;color:var(--muted2);text-transform:uppercase;letter-spacing:.5px;font-family:'DM Mono',monospace}
+.form-section{display:flex;flex-direction:column;gap:8px}
+.form-lbl{font-size:11px;color:var(--muted2);font-family:'DM Mono',monospace;margin-bottom:2px}
+.form-input,.form-select{background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:var(--r-sm);padding:9px 12px;color:var(--text);font-family:'Syne',sans-serif;font-size:13px;outline:none;width:100%;transition:border-color .2s}
+.form-input:focus,.form-select:focus{border-color:var(--amber)}
+.form-row{display:flex;gap:8px}
+.form-row .form-input,.form-row .form-select{flex:1}
+.btn-primary{background:var(--amber);border:none;border-radius:var(--r-sm);padding:10px;color:#000;font-size:13px;font-weight:800;font-family:'Syne',sans-serif;cursor:pointer;width:100%;transition:opacity .18s}
+.btn-primary:hover{opacity:.85}
+.btn-secondary{background:transparent;border:1px solid var(--border);border-radius:var(--r-sm);padding:10px;color:var(--muted2);font-size:13px;font-weight:600;font-family:'Syne',sans-serif;cursor:pointer;width:100%;transition:all .18s}
+.btn-secondary:hover{border-color:var(--border2);color:var(--text)}
+.adivider{height:1px;background:var(--border)}
+.series-item{background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:var(--r-sm);padding:10px 12px;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.series-item-name{font-size:12px;font-weight:600}
+.series-item-meta{font-size:10px;color:var(--muted);font-family:'DM Mono',monospace;margin-top:2px}
+.series-del{background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px}
+.series-del:hover{color:var(--danger)}
+
+/* TABS */
+.tabs-wrap{border-bottom:1px solid var(--border);padding:0;overflow-x:auto}
+.tabs{display:flex}
+.tab{padding:11px 16px 9px;font-size:13px;font-weight:600;cursor:pointer;border-bottom:2px solid transparent;color:var(--muted);white-space:nowrap;transition:all .2s;background:none;border-top:none;border-left:none;border-right:none;font-family:'Syne',sans-serif;display:flex;align-items:center;gap:7px}
+.tab:hover{color:var(--text)}
+.tab.on{color:var(--text);border-bottom-color:var(--amber)}
+.tab .badge{background:rgba(245,158,11,0.15);color:#fcd34d;padding:1px 7px;border-radius:10px;font-size:10px;font-family:'DM Mono',monospace}
+.cdot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.fbar{display:flex;gap:7px;margin:14px 0;align-items:center;flex-wrap:wrap}
+.fbar-lbl{font-size:11px;color:var(--muted);font-family:'DM Mono',monospace}
+.fbtn{padding:5px 14px;border-radius:20px;font-size:12px;font-weight:600;font-family:'Syne',sans-serif;cursor:pointer;transition:all .18s;border:1px solid var(--border);background:transparent;color:var(--muted)}
+.fbtn:hover{border-color:var(--border2);color:var(--text)}
+.fbtn.on{background:var(--amber);border-color:var(--amber);color:#000}
+.fselect{background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:20px;padding:4px 12px;color:var(--text);font-size:11px;font-family:'DM Mono',monospace;cursor:pointer;outline:none;-webkit-appearance:none}
+
+/* TURNO CARDS */
+.dg{margin-bottom:30px}
+.dg-head{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.dg-lbl{font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted2);font-family:'DM Mono',monospace;white-space:nowrap}
+.dg-line{flex:1;height:1px;background:var(--border)}
+.tgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:11px}
+.tc{background:var(--card);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;transition:transform .18s,border-color .18s}
+.tc:hover{transform:translateY(-1px);border-color:var(--border2)}
+.tc.lleno{border-color:rgba(239,68,68,0.2)}
+.tc.cancelado{opacity:.45}
+.tc.urgente{border-color:rgba(245,158,11,0.3)}
+.tc-bar{height:3px}
+.tc-head{padding:13px 15px 10px;display:flex;justify-content:space-between;align-items:flex-start;border-bottom:1px solid var(--border)}
+.tc-nombre{font-size:13px;font-weight:700;color:var(--text);line-height:1.2;margin-bottom:2px}
+.tc-meta{font-size:10px;color:var(--muted);font-family:'DM Mono',monospace;display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:3px}
+.tag-fijo{background:rgba(59,130,246,0.12);border:1px solid rgba(59,130,246,0.25);color:#93c5fd;padding:1px 7px;border-radius:10px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.5px}
+.tag-ocas{background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.22);color:#fcd34d;padding:1px 7px;border-radius:10px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.5px}
+.tc-estado{padding:3px 9px;border-radius:12px;font-size:10px;font-weight:700;font-family:'DM Mono',monospace;flex-shrink:0;margin-left:8px}
+.est-disponible{background:var(--success-bg);color:#6ee49a}
+.est-lleno{background:var(--danger-bg);color:#fca5a5}
+.est-cancelado{background:rgba(80,80,80,0.2);color:var(--muted2)}
+.tc-body{padding:11px 15px 13px}
+.slots{display:flex;gap:3px;margin-bottom:8px;flex-wrap:wrap}
+.slot{width:20px;height:9px;border-radius:3px;border:1px solid rgba(255,255,255,0.07)}
+.slot.libre{background:rgba(255,255,255,0.04)}
+.slot.ocup{background:var(--grass-dim);border-color:rgba(45,158,82,0.4)}
+.slots-info{font-size:10px;color:var(--muted);font-family:'DM Mono',monospace;margin-bottom:9px}
+.slots-info strong{color:var(--grass-l)}
+.pills{display:flex;flex-wrap:wrap;gap:5px;min-height:20px;margin-bottom:9px}
+.pill{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:20px;padding:2px 9px;font-size:11px;color:#c9d5c9;display:flex;align-items:center;gap:4px;font-weight:600}
+.pill-x{background:none;border:none;color:var(--muted);cursor:pointer;font-size:14px;line-height:1;padding:0;display:flex;align-items:center}
+.pill-x:hover{color:var(--danger)}
+.pill-wa{font-size:9px;color:var(--muted);font-family:'DM Mono',monospace;opacity:.7}
+.tc-admin{border-top:1px solid var(--border);padding:9px 15px;background:rgba(245,158,11,0.03);display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.adm-btn{padding:5px 10px;border-radius:6px;font-size:10px;font-weight:700;font-family:'DM Mono',monospace;cursor:pointer;border:1px solid;text-transform:uppercase;letter-spacing:.3px;transition:all .15s}
+.adm-add{background:var(--success-bg);border-color:rgba(45,158,82,0.3);color:#6ee49a}
+.adm-add:hover{background:rgba(45,158,82,0.2)}
+.adm-bajar{background:var(--warn-bg);border-color:rgba(245,158,11,0.25);color:#fcd34d}
+.adm-bajar:hover{background:rgba(245,158,11,0.15)}
+.adm-cancel{background:var(--danger-bg);border-color:rgba(239,68,68,0.2);color:#fca5a5}
+.adm-cancel:hover{background:rgba(239,68,68,0.18)}
+.adm-react{background:var(--success-bg);border-color:rgba(45,158,82,0.2);color:#6ee49a}
+.adm-react:hover{background:rgba(45,158,82,0.2)}
+.adm-del{background:rgba(139,0,0,0.2);border-color:rgba(239,68,68,0.4);color:#fca5a5;font-weight:800}
+.adm-del:hover{background:rgba(239,68,68,0.3)}
+.empty{text-align:center;padding:56px 20px;color:var(--muted)}
+.empty-icon{font-size:44px;margin-bottom:12px}
+.empty p{font-size:14px;line-height:1.6}
+.loading{text-align:center;padding:60px;color:var(--muted);font-family:'DM Mono',monospace;font-size:13px}
+
+/* MODALS */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:500;display:flex;align-items:center;justify-content:center;padding:20px}
+.modal{background:#141e14;border:1px solid var(--border2);border-radius:var(--r-lg);padding:26px;max-width:380px;width:100%}
+.modal h2{font-size:17px;font-weight:800;margin-bottom:6px}
+.modal p{font-size:12px;color:var(--muted2);margin-bottom:14px;line-height:1.6}
+.modal-row{display:flex;gap:8px;margin-top:4px}
+.modal input,.modal select{background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:var(--r-sm);padding:9px 12px;color:var(--text);font-size:14px;font-family:'Syne',sans-serif;width:100%;outline:none;margin-bottom:10px}
+.modal input:focus,.modal select:focus{border-color:var(--amber)}
+.modal-lbl{font-size:11px;color:var(--muted2);font-family:'DM Mono',monospace;margin-bottom:4px;display:block}
+.modal-ok{flex:1;background:var(--grass);border:none;border-radius:var(--r-sm);padding:10px;color:#fff;font-size:13px;font-weight:700;font-family:'Syne',sans-serif;cursor:pointer}
+.modal-ok:hover{background:var(--grass-l)}
+.modal-ok.danger{background:rgba(180,30,30,0.8)}
+.modal-ok.danger:hover{background:var(--danger)}
+.modal-cancel{padding:10px 16px;background:transparent;border:1px solid var(--border);border-radius:var(--r-sm);color:var(--muted2);font-size:13px;font-family:'Syne',sans-serif;cursor:pointer}
+.modal-cancel:hover{color:var(--text)}
+.toast-wrap{position:fixed;bottom:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:7px}
+.toast{padding:10px 16px;border-radius:var(--r);font-size:13px;font-weight:600;border:1px solid;animation:tin .22s ease;max-width:300px;font-family:'Syne',sans-serif}
+.toast.ok{background:rgba(45,158,82,0.15);border-color:rgba(45,158,82,0.3);color:#6ee49a}
+.toast.err{background:var(--danger-bg);border-color:rgba(239,68,68,0.3);color:#fca5a5}
+.toast.inf{background:rgba(59,130,246,0.12);border-color:rgba(59,130,246,0.3);color:#93c5fd}
+@keyframes tin{from{transform:translateX(14px);opacity:0}to{opacity:1;transform:none}}
+
+@media(max-width:900px){
+  .layout{flex-direction:column}
+  .sidebar{width:100%;position:static;max-height:none;border-right:none;border-bottom:1px solid var(--border)}
+  .content-area{padding:16px 14px 80px}
+}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen" class="login-screen">
+  <div class="login-logo-row">
+    <div class="login-ball">🔧</div>
+    <div class="login-logo-txt">Fútbol 5</div>
+  </div>
+  <div class="login-sub">PANEL DE ADMINISTRACIÓN</div>
+  <div class="login-card">
+    <h2>Acceso restringido</h2>
+    <p>Solo para administradores del complejo.</p>
+    <span class="login-lbl">Contraseña</span>
+    <input class="login-input" type="password" id="login-pass" placeholder="Contraseña..." onkeydown="if(event.key==='Enter')checkLogin()"/>
+    <button class="login-btn" onclick="checkLogin()">Entrar al panel →</button>
+  </div>
+</div>
+
+<!-- HEADER (oculto hasta login) -->
+<div class="header" id="main-header" style="display:none">
+  <div class="header-inner">
+    <div class="logo" onclick="location.href='cliente.html'">
+      <div class="logo-ball">🔧</div>
+      <div><div class="logo-text">Fútbol 5</div><div class="logo-sub">ADMIN PANEL</div></div>
+    </div>
+    <span class="admin-badge">Admin</span>
+    <div class="hgap"></div>
+    <div class="rt-badge wait" id="rt-badge"><div class="rt-dot"></div><span id="rt-txt">Conectando</span></div>
+    <button class="btn-logout" onclick="logout()">Salir</button>
+  </div>
+</div>
+
+<!-- MAIN (oculto hasta login) -->
+<div id="main-app" style="display:none">
+  <div class="layout">
+
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+
+      <!-- AGREGAR TURNO -->
+      <div class="form-section">
+        <div class="section-title">➕ Agregar turno</div>
+        <div class="form-lbl">Nombre del turno / dueño</div>
+        <input class="form-input" id="a-nombre" type="text" placeholder="ej: Los del Tano — Martes"/>
+        <div class="form-row">
+          <div style="flex:1"><div class="form-lbl">Cancha</div>
+            <select class="form-select" id="a-cancha">
+              <option value="c1">Cancha 1 — F6</option>
+              <option value="c2">Cancha 2 — F6</option>
+              <option value="c3">Cancha 3 — F5</option>
+            </select>
+          </div>
+          <div style="flex:1"><div class="form-lbl">Hora</div>
+            <input class="form-input" id="a-hora" type="time" value="20:00"/>
+          </div>
+        </div>
+        <div class="form-lbl">Fecha</div>
+        <input class="form-input" id="a-fecha" type="date"/>
+        <div class="form-lbl">Estado inicial</div>
+        <select class="form-select" id="a-estado">
+          <option value="lleno">Completo (lleno)</option>
+          <option value="disponible">Con lugares disponibles</option>
+        </select>
+        <button class="btn-primary" onclick="addTurnoAdmin()">+ Agregar turno</button>
+      </div>
+
+      <div class="adivider"></div>
+
+      <!-- SERIES RECURRENTES -->
+      <div class="form-section">
+        <div class="section-title">🔁 Turnos fijos recurrentes</div>
+        <div class="form-lbl">Nombre de la serie</div>
+        <input class="form-input" id="s-nombre" type="text" placeholder="ej: Martes de las 21 — Tano"/>
+        <div class="form-row">
+          <div style="flex:1"><div class="form-lbl">Cancha</div>
+            <select class="form-select" id="s-cancha">
+              <option value="c1">Cancha 1</option>
+              <option value="c2">Cancha 2</option>
+              <option value="c3">Cancha 3</option>
+            </select>
+          </div>
+          <div style="flex:1"><div class="form-lbl">Día</div>
+            <select class="form-select" id="s-dia">
+              <option value="0">Domingo</option><option value="1">Lunes</option><option value="2">Martes</option>
+              <option value="3">Miércoles</option><option value="4">Jueves</option><option value="5">Viernes</option><option value="6">Sábado</option>
+            </select>
+          </div>
+          <div style="flex:1"><div class="form-lbl">Hora</div>
+            <input class="form-input" id="s-hora" type="time" value="20:00"/>
+          </div>
+        </div>
+        <div class="form-lbl">Estado inicial de cada turno</div>
+        <select class="form-select" id="s-estado">
+          <option value="lleno">Completo (lleno)</option>
+          <option value="disponible">Con lugares disponibles</option>
+        </select>
+        <div class="form-lbl">Generar semanas adelante</div>
+        <select class="form-select" id="s-semanas">
+          <option value="4" selected>4 semanas</option>
+          <option value="8">8 semanas</option>
+          <option value="12">12 semanas</option>
+        </select>
+        <button class="btn-primary" onclick="addSerie()">+ Crear serie recurrente</button>
+      </div>
+
+      <div class="adivider"></div>
+
+      <div class="form-section">
+        <div class="section-title">Series activas</div>
+        <div id="series-list"><div style="font-size:12px;color:var(--muted)">Cargando...</div></div>
+      </div>
+    </div>
+
+    <!-- CONTENT -->
+    <div class="content-area">
+      <div class="tabs-wrap">
+        <div class="tabs">
+          <button class="tab on" onclick="setTab('todas')" id="tab-todas">Todas</button>
+          <button class="tab" onclick="setTab('c1')" id="tab-c1"><span class="cdot" style="background:#22c55e"></span>Cancha 1<span class="badge" id="bc1">0</span></button>
+          <button class="tab" onclick="setTab('c2')" id="tab-c2"><span class="cdot" style="background:#3b82f6"></span>Cancha 2<span class="badge" id="bc2">0</span></button>
+          <button class="tab" onclick="setTab('c3')" id="tab-c3"><span class="cdot" style="background:#f59e0b"></span>Cancha 3<span class="badge" id="bc3">0</span></button>
+        </div>
+      </div>
+      <div class="fbar">
+        <span class="fbar-lbl">Mostrar:</span>
+        <button class="fbtn on" onclick="setF('todos')" id="f-todos">Todos</button>
+        <button class="fbtn" onclick="setF('disponibles')" id="f-disp">Con lugares</button>
+        <button class="fbtn" onclick="setF('llenos')" id="f-llen">Llenos</button>
+        <button class="fbtn" onclick="setF('fijo')" id="f-fijo">Fijos</button>
+        <button class="fbtn" onclick="setF('ocasional')" id="f-ocas">Ocasionales</button>
+        <span class="fbar-lbl" style="margin-left:6px">Fecha:</span>
+        <select class="fselect" id="fdate" onchange="render()"><option value="">Todos</option></select>
+      </div>
+      <div id="content"><div class="loading">Cargando turnos...</div></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- MODAL: agregar jugador -->
+<div class="modal-bg" id="modal-add" style="display:none">
+  <div class="modal">
+    <h2>➕ Agregar jugador</h2>
+    <p id="modal-add-info"></p>
+    <span class="modal-lbl">Nombre del jugador</span>
+    <input type="text" id="modal-add-nombre" placeholder="Nombre..." onkeydown="if(event.key==='Enter')confirmarAdd()"/>
+    <span class="modal-lbl">Origen</span>
+    <select id="modal-add-origen"><option value="whatsapp">WhatsApp</option><option value="web">Web</option></select>
+    <div class="modal-row">
+      <button class="modal-cancel" onclick="closeModal('modal-add')">Cancelar</button>
+      <button class="modal-ok" onclick="confirmarAdd()">Agregar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: bajar jugador -->
+<div class="modal-bg" id="modal-bajar" style="display:none">
+  <div class="modal">
+    <h2>🔻 Bajar jugador</h2>
+    <p id="modal-bajar-info"></p>
+    <span class="modal-lbl">Seleccioná el jugador</span>
+    <select id="modal-bajar-sel"></select>
+    <div class="modal-row">
+      <button class="modal-cancel" onclick="closeModal('modal-bajar')">Cancelar</button>
+      <button class="modal-ok danger" onclick="confirmarBajar()">Bajar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: eliminar turno -->
+<div class="modal-bg" id="modal-del" style="display:none">
+  <div class="modal">
+    <h2>🗑️ Eliminar turno</h2>
+    <p id="modal-del-info"></p>
+    <div id="modal-del-serie" style="display:none;margin-bottom:12px;padding:10px 12px;background:rgba(245,158,11,0.07);border:1px solid rgba(245,158,11,0.2);border-radius:var(--r-sm)">
+      <div style="font-size:11px;font-weight:700;color:#fcd34d;font-family:'DM Mono',monospace;margin-bottom:8px;text-transform:uppercase;letter-spacing:.4px">⚡ Este turno es parte de una serie fija</div>
+      <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted2);cursor:pointer;margin-bottom:6px">
+        <input type="radio" name="del-scope" value="uno" checked style="accent-color:var(--grass)"/> Solo este turno
+      </label>
+      <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted2);cursor:pointer">
+        <input type="radio" name="del-scope" value="serie" style="accent-color:#f59e0b"/> Toda la serie (turnos futuros sin reservas)
+      </label>
+    </div>
+    <div class="modal-row">
+      <button class="modal-cancel" onclick="closeModal('modal-del')">Cancelar</button>
+      <button class="modal-ok danger" onclick="confirmarEliminar()">Eliminar</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-wrap" id="toasts"></div>
+
+<script>
+const SUPABASE_URL  = 'https://ydcyeffpmwgbwisytgpi.supabase.co';
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlkY3llZmZwbXdnYndpc3l0Z3BpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1MDUwODksImV4cCI6MjA5MDA4MTA4OX0.CXSsuKiNwgywoS2xZJCFhV7SUHiIMypqFFZys5gd59U';
+const ADMIN_PASS = 'Beltran';
+
+const { createClient } = supabase;
+const sb = createClient(SUPABASE_URL, SUPABASE_ANON);
+
+let state = { turnos:[], canchas:[], series:[], tab:'todas', filter:'todos' };
+let pendingAdd=null, pendingBajar=null, pendingDel=null;
+
+// ── LOGIN ──────────────────────────────────────────────────────────────────────
+function checkLogin() {
+  const pass = document.getElementById('login-pass').value;
+  if (pass === ADMIN_PASS) {
+    sessionStorage.setItem('fb5_admin', '1');
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('main-header').style.display = 'block';
+    document.getElementById('main-app').style.display = 'block';
+    document.getElementById('a-fecha').value = today();
+    loadAll().then(subscribeRealtime);
+  } else {
+    toast('Contraseña incorrecta', 'err');
+    document.getElementById('login-pass').value = '';
+  }
+}
+
+function logout() {
+  sessionStorage.removeItem('fb5_admin');
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('main-header').style.display = 'none';
+  document.getElementById('main-app').style.display = 'none';
+  document.getElementById('login-pass').value = '';
+}
+
+// ── SUPABASE ──────────────────────────────────────────────────────────────────
+async function loadAll() {
+  const [{ data:canchas },{ data:turnos },{ data:series }] = await Promise.all([
+    sb.from('canchas').select('*').order('id'),
+    sb.from('turnos_completos').select('*').gte('fecha',today()).order('fecha').order('hora'),
+    sb.from('series_recurrentes').select('*').eq('activa',true).order('created_at'),
+  ]);
+  state.canchas = canchas||[];
+  state.turnos = (turnos||[]).map(normTurno);
+  state.series = series||[];
+  populateDateFilter(); render(); updateBadges(); renderSeriesList();
+}
+
+function normTurno(t) {
+  if (typeof t.jugadores==='string'){try{t.jugadores=JSON.parse(t.jugadores);}catch{t.jugadores=[];}}
+  if (!Array.isArray(t.jugadores)) t.jugadores=[];
+  return t;
+}
+
+function subscribeRealtime() {
+  sb.channel('admin').on('postgres_changes',{event:'*',schema:'public',table:'turnos'},refreshTurnos)
+    .on('postgres_changes',{event:'*',schema:'public',table:'reservas'},refreshTurnos)
+    .subscribe(s=>{
+      const b=document.getElementById('rt-badge'),t=document.getElementById('rt-txt');
+      if(s==='SUBSCRIBED'){b.className='rt-badge ok';t.textContent='En vivo';}
+      else if(s==='CLOSED'||s==='CHANNEL_ERROR'){b.className='rt-badge err';t.textContent='Sin conexión';}
+      else{b.className='rt-badge wait';t.textContent='Conectando';}
+    });
+}
+
+async function refreshTurnos() {
+  const {data}=await sb.from('turnos_completos').select('*').gte('fecha',today()).order('fecha').order('hora');
+  state.turnos=(data||[]).map(normTurno);
+  render(); updateBadges();
+}
+
+// ── RENDER ────────────────────────────────────────────────────────────────────
+function render() {
+  const selDate=document.getElementById('fdate').value;
+  const content=document.getElementById('content');
+  let list=state.turnos.filter(t=>{
+    if(['c1','c2','c3'].includes(state.tab)&&t.cancha_id!==state.tab) return false;
+    if(state.filter==='disponibles'&&t.estado!=='disponible') return false;
+    if(state.filter==='llenos'&&t.estado!=='lleno') return false;
+    if(state.filter==='fijo'&&t.tipo!=='fijo') return false;
+    if(state.filter==='ocasional'&&t.tipo!=='ocasional') return false;
+    if(selDate&&t.fecha!==selDate) return false;
+    return true;
+  });
+  if(!list.length){content.innerHTML=`<div class="empty"><div class="empty-icon">📋</div><p>No hay turnos para mostrar</p></div>`;return;}
+  const byDate={};
+  list.forEach(t=>{(byDate[t.fecha]=byDate[t.fecha]||[]).push(t);});
+  content.innerHTML=Object.entries(byDate).sort(([a],[b])=>a.localeCompare(b))
+    .map(([fecha,ts])=>`<div class="dg"><div class="dg-head"><span class="dg-lbl">${fmtDate(fecha)}</span><div class="dg-line"></div></div><div class="tgrid">${ts.sort((a,b)=>a.hora.localeCompare(b.hora)||(a.cancha_id.localeCompare(b.cancha_id))).map(renderCard).join('')}</div></div>`)
+    .join('');
+}
+
+function renderCard(t) {
+  const max=t.max_jugadores, count=t.jugadores.length, libre=max-count;
+  const cancel=t.estado==='cancelado';
+  const colors={c1:'#22c55e',c2:'#3b82f6',c3:'#f59e0b'};
+  const color=colors[t.cancha_id]||'#6b7280';
+
+  const slots=Array.from({length:max},(_,i)=>{
+    const j=t.jugadores[i];
+    if(!j) return `<div class="slot libre"></div>`;
+    return `<div class="slot ocup" title="${esc(j.nombre)}"></div>`;
+  }).join('');
+
+  const pills=t.jugadores.map(j=>{
+    const wa=j.origen==='whatsapp';
+    const safeName=esc(j.nombre).replace(/'/g,'&#39;');
+    return `<div class="pill">${esc(j.nombre)}${wa?'<span class="pill-wa">WA</span>':''}<button class="pill-x" onclick="quitarJugador('${t.id}','${safeName}')">×</button></div>`;
+  }).join('')||`<span style="font-size:10px;color:var(--muted);font-family:'DM Mono',monospace">Sin reservas</span>`;
+
+  const hasjug=t.jugadores.length>0;
+  const adminStrip=`<div class="tc-admin">
+    <button class="adm-btn adm-add" onclick="openAdd('${t.id}')">+ Jugador</button>
+    ${hasjug?`<button class="adm-btn adm-bajar" onclick="openBajar('${t.id}')">Bajar jugador</button>`:''}
+    ${!cancel?`<button class="adm-btn adm-cancel" onclick="cancelTurno('${t.id}')">Cancelar</button>`:''}
+    ${cancel?`<button class="adm-btn adm-react" onclick="reactTurno('${t.id}')">Reactivar</button>`:''}
+    <button class="adm-btn adm-del" onclick="openDel('${t.id}')">🗑 Eliminar</button>
+  </div>`;
+
+  const tipoTag=t.tipo==='fijo'?`<span class="tag-fijo">Fijo</span>`:`<span class="tag-ocas">Ocasional</span>`;
+  const ownerInfo=t.telefono_owner?`<span style="font-size:9px;color:var(--muted);font-family:'DM Mono',monospace">📱 ${esc(t.telefono_owner)}</span>`:'';
+
+  return `<div class="${['tc',t.estado].filter(Boolean).join(' ')}">
+    <div class="tc-bar" style="background:${color}"></div>
+    <div class="tc-head" style="border-left:3px solid ${color}">
+      <div>
+        <div class="tc-nombre">${esc(t.nombre)}</div>
+        <div class="tc-meta">${t.hora.slice(0,5)} · ${t.cancha_nombre} · ${t.cancha_tipo} ${tipoTag} ${ownerInfo}</div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
+        <div class="tc-estado est-${t.estado}">${estadoLabel(t.estado)}</div>
+        ${libre>0&&!cancel?`<div style="font-size:10px;color:var(--muted);font-family:'DM Mono',monospace">${libre} libre${libre!==1?'s':''}</div>`:''}
+      </div>
+    </div>
+    <div class="tc-body">
+      <div class="slots">${slots}</div>
+      <div class="slots-info"><strong>${count}/${max}</strong> jugadores</div>
+      <div class="pills">${pills}</div>
+    </div>
+    ${adminStrip}
+  </div>`;
+}
+
+// ── ADMIN ACCIONES ────────────────────────────────────────────────────────────
+function openAdd(turnoId){pendingAdd=turnoId;const t=state.turnos.find(x=>x.id===turnoId);document.getElementById('modal-add-info').textContent=`${t?.nombre||''} — ${t?.fecha||''} ${t?.hora?.slice(0,5)||''}`;document.getElementById('modal-add-nombre').value='';document.getElementById('modal-add-origen').value='whatsapp';document.getElementById('modal-add').style.display='flex';setTimeout(()=>document.getElementById('modal-add-nombre').focus(),80);}
+
+async function confirmarAdd(){
+  const nombre=document.getElementById('modal-add-nombre').value.trim();
+  const origen=document.getElementById('modal-add-origen').value;
+  if(!nombre){toast('Ingresá el nombre','err');return;}
+  const t=state.turnos.find(x=>x.id===pendingAdd); if(!t) return;
+  const {error}=await sb.from('reservas').insert({turno_id:pendingAdd,nombre,origen});
+  if(error){toast(error.code==='23505'?'Ese nombre ya está anotado':'Error: '+error.message,'err');return;}
+  const newCount=t.jugadores.length+1;
+  if(newCount>=t.max_jugadores) await sb.from('turnos').update({estado:'lleno'}).eq('id',pendingAdd);
+  else if(t.estado==='lleno') await sb.from('turnos').update({estado:'disponible'}).eq('id',pendingAdd);
+  closeModal('modal-add');
+  toast(`${nombre} agregado ✓`,'ok');
+}
+
+function openBajar(turnoId){const t=state.turnos.find(x=>x.id===turnoId);if(!t||!t.jugadores.length){toast('No hay jugadores en este turno','err');return;}pendingBajar=turnoId;document.getElementById('modal-bajar-info').textContent=`${t.nombre} — ${t.fecha} ${t.hora?.slice(0,5)}`;const sel=document.getElementById('modal-bajar-sel');sel.innerHTML=t.jugadores.map(j=>`<option value="${esc(j.id)}">${esc(j.nombre)}${j.origen==='whatsapp'?' (WA)':''}</option>`).join('');document.getElementById('modal-bajar').style.display='flex';}
+
+async function confirmarBajar(){const reservaId=document.getElementById('modal-bajar-sel').value;const t=state.turnos.find(x=>x.id===pendingBajar);await sb.from('reservas').delete().eq('id',reservaId);if(t?.estado==='lleno') await sb.from('turnos').update({estado:'disponible'}).eq('id',pendingBajar);closeModal('modal-bajar');toast('Jugador bajado del turno','ok');}
+
+async function quitarJugador(turnoId,nombre){const t=state.turnos.find(x=>x.id===turnoId);const j=t?.jugadores.find(x=>x.nombre===nombre);if(!j) return;await sb.from('reservas').delete().eq('id',j.id);if(t.estado==='lleno') await sb.from('turnos').update({estado:'disponible'}).eq('id',turnoId);toast('Jugador removido','ok');}
+
+async function cancelTurno(id){await sb.from('turnos').update({estado:'cancelado'}).eq('id',id);toast('Turno cancelado','ok');}
+async function reactTurno(id){const t=state.turnos.find(x=>x.id===id);const est=t&&t.jugadores.length>=t.max_jugadores?'lleno':'disponible';await sb.from('turnos').update({estado:est}).eq('id',id);toast('Turno reactivado','ok');}
+
+function openDel(turnoId){
+  pendingDel=turnoId;
+  const t=state.turnos.find(x=>x.id===turnoId);
+  const esFijo=t?.tipo==='fijo'&&t?.recurrencia_id;
+  document.getElementById('modal-del-info').textContent=`¿Eliminar "${t?.nombre}"? Se borran también todos los jugadores anotados.`;
+  const seriePanel=document.getElementById('modal-del-serie');
+  seriePanel.style.display=esFijo?'block':'none';
+  if(esFijo) document.querySelector('input[name="del-scope"][value="uno"]').checked=true;
+  document.getElementById('modal-del').style.display='flex';
+}
+
+async function confirmarEliminar(){
+  const t=state.turnos.find(x=>x.id===pendingDel);
+  const scope=document.querySelector('input[name="del-scope"]:checked')?.value||'uno';
+  if(scope==='serie'&&t?.recurrencia_id){
+    const hoy=today();
+    const turnosSerie=state.turnos.filter(x=>x.recurrencia_id===t.recurrencia_id&&x.fecha>=hoy&&x.jugadores.length===0);
+    const ids=turnosSerie.map(x=>x.id);
+    if(ids.length>0){
+      // Delete reservas for each turno in serie
+      for(const id of ids){ await sb.from('reservas').delete().eq('turno_id',id); }
+      const {error}=await sb.from('turnos').delete().in('id',ids);
+      if(error){toast('Error al eliminar serie: '+error.message,'err');return;}
+    }
+    await sb.from('series_recurrentes').update({activa:false}).eq('id',t.recurrencia_id);
+    closeModal('modal-del');
+    state.turnos=state.turnos.filter(x=>!ids.includes(x.id));
+    render(); updateBadges();
+    toast(`Serie eliminada — ${ids.length} turno${ids.length!==1?'s':''} borrado${ids.length!==1?'s':''}.`,'ok');
+  } else {
+    // Delete reservas first, then turno
+    await sb.from('reservas').delete().eq('turno_id', pendingDel);
+    const {error}=await sb.from('turnos').delete().eq('id',pendingDel);
+    if(error){toast('Error al eliminar: '+error.message,'err');return;}
+    closeModal('modal-del');
+    state.turnos=state.turnos.filter(x=>x.id!==pendingDel);
+    render(); updateBadges();
+    toast('Turno eliminado ✓','ok');
+  }
+}
+
+async function addTurnoAdmin(){
+  const cancha_id=document.getElementById('a-cancha').value;
+  const hora=document.getElementById('a-hora').value;
+  const fecha=document.getElementById('a-fecha').value;
+  const nombre=document.getElementById('a-nombre').value.trim();
+  const estado=document.getElementById('a-estado').value;
+  if(!fecha||!hora||!nombre){toast('Completá todos los campos','err');return;}
+  const {error}=await sb.from('turnos').insert({cancha_id,fecha,hora:hora+':00',nombre,tipo:'ocasional',estado});
+  if(error){toast('Error: '+error.message,'err');return;}
+  document.getElementById('a-nombre').value='';
+  toast('Turno creado ✓','ok'); await refreshTurnos();
+}
+
+// ── SERIES ────────────────────────────────────────────────────────────────────
+async function addSerie(){
+  const nombre=document.getElementById('s-nombre').value.trim();
+  const cancha_id=document.getElementById('s-cancha').value;
+  const dia=parseInt(document.getElementById('s-dia').value);
+  const hora=document.getElementById('s-hora').value;
+  const semanas=parseInt(document.getElementById('s-semanas').value);
+  const estado=document.getElementById('s-estado').value;
+  if(!nombre||!hora){toast('Completá todos los campos','err');return;}
+  const serieId=`${cancha_id}-d${dia}-${hora.replace(':','')}`;
+  const {error:se}=await sb.from('series_recurrentes').upsert({id:serieId,cancha_id,nombre,dia_semana:dia,hora:hora+':00',activa:true});
+  if(se){toast('Error: '+se.message,'err');return;}
+  const dias=['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+  const base=new Date(); base.setHours(0,0,0,0);
+  const turnos=[];
+  for(let w=0;w<semanas;w++){
+    const anchor=new Date(base);
+    let diff=dia-anchor.getDay(); if(diff<=0) diff+=7;
+    anchor.setDate(anchor.getDate()+diff+(w*7));
+    const fechaStr=anchor.toISOString().split('T')[0];
+    const exists=state.turnos.find(t=>t.cancha_id===cancha_id&&t.fecha===fechaStr&&t.hora.startsWith(hora)&&t.tipo==='fijo');
+    if(exists) continue;
+    turnos.push({cancha_id,fecha:fechaStr,hora:hora+':00',nombre:`${nombre} — ${dias[dia]} ${hora}`,tipo:'fijo',recurrencia_id:serieId,estado});
+  }
+  if(turnos.length>0){const {error:te}=await sb.from('turnos').insert(turnos);if(te){toast('Error: '+te.message,'err');return;}}
+  toast(`Serie creada — ${turnos.length} turnos generados ✓`,'ok');
+  await loadAll();
+}
+
+async function deleteSerie(id){
+  if(!confirm('¿Desactivar esta serie? Los turnos ya generados no se borran.')) return;
+  await sb.from('series_recurrentes').update({activa:false}).eq('id',id);
+  toast('Serie desactivada','ok');
+  const {data}=await sb.from('series_recurrentes').select('*').eq('activa',true);
+  state.series=data||[]; renderSeriesList();
+}
+
+function renderSeriesList(){
+  const el=document.getElementById('series-list');
+  if(!state.series.length){el.innerHTML='<div style="font-size:12px;color:var(--muted)">No hay series activas</div>';return;}
+  const dias=['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+  el.innerHTML=state.series.map(s=>{
+    const c=state.canchas.find(x=>x.id===s.cancha_id);
+    return `<div class="series-item"><div><div class="series-item-name">${esc(s.nombre)}</div><div class="series-item-meta">${dias[s.dia_semana]} ${s.hora?.slice(0,5)} · ${c?.nombre||s.cancha_id}</div></div><button class="series-del" onclick="deleteSerie('${s.id}')">×</button></div>`;
+  }).join('');
+}
+
+// ── UI HELPERS ────────────────────────────────────────────────────────────────
+function setTab(tab){state.tab=tab;document.querySelectorAll('.tab').forEach(el=>el.classList.remove('on'));document.getElementById('tab-'+tab)?.classList.add('on');render();}
+function setF(f){state.filter=f;['todos','disp','llen','fijo','ocas'].forEach(x=>document.getElementById('f-'+x)?.classList.remove('on'));const map={todos:'todos',disponibles:'disp',llenos:'llen',fijo:'fijo',ocasional:'ocas'};document.getElementById('f-'+map[f])?.classList.add('on');render();}
+function populateDateFilter(){const sel=document.getElementById('fdate');const dates=[...new Set(state.turnos.map(t=>t.fecha))].sort();sel.innerHTML='<option value="">Todos</option>'+dates.map(d=>`<option value="${d}">${fmtDate(d)}</option>`).join('');}
+function updateBadges(){['c1','c2','c3'].forEach(cid=>{const n=state.turnos.filter(t=>t.cancha_id===cid&&t.estado==='disponible').length;const el=document.getElementById('b'+cid);if(el)el.textContent=n;});}
+function closeModal(id){document.getElementById(id).style.display='none';}
+function toast(msg,type='inf'){const c=document.getElementById('toasts');const el=document.createElement('div');el.className='toast '+type;el.textContent=msg;c.appendChild(el);setTimeout(()=>{el.style.opacity='0';el.style.transition='opacity .3s';setTimeout(()=>el.remove(),300);},3500);}
+function today(){return new Date().toISOString().split('T')[0];}
+function esc(s){return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function estadoLabel(e){return e==='disponible'?'Disponible':e==='lleno'?'Lleno':'Cancelado';}
+function fmtDate(str){if(!str)return'';const[y,m,d]=str.split('-');const date=new Date(parseInt(y),parseInt(m)-1,parseInt(d));const dias=['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];const meses=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];const t=today(),tm=new Date(Date.now()+86400000).toISOString().split('T')[0];if(str===t)return`HOY · ${parseInt(d)} ${meses[parseInt(m)-1]}`;if(str===tm)return`MAÑANA · ${parseInt(d)} ${meses[parseInt(m)-1]}`;return`${dias[date.getDay()]} ${parseInt(d)} ${meses[parseInt(m)-1]}`;}
+
+// Auto-login si hay sesión activa
+if (sessionStorage.getItem('fb5_admin') === '1') {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('main-header').style.display = 'block';
+  document.getElementById('main-app').style.display = 'block';
+  document.getElementById('a-fecha').value = today();
+  loadAll().then(subscribeRealtime);
+}
+</script>
+</body>
+</html>
