@@ -7,445 +7,198 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
-/* ─── RESET & ROOT ──────────────────────────────────────────────── */
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-:root {
-  --bg: #080c08;
-  --bg2: #0e1510;
-  --bg3: #111d12;
-  --card: #13191a;
-  --border: rgba(255,255,255,0.07);
-  --border2: rgba(255,255,255,0.12);
-  --text: #e8ede8;
-  --muted: #5a6e5a;
-  --muted2: #7a917a;
-  --grass: #2d9e52;
-  --grass-l: #3dbb63;
-  --grass-dim: #1e6e38;
-  --blue: #3b82f6;
-  --amber: #f59e0b;
-  --danger: #ef4444;
-  --danger-bg: rgba(239,68,68,0.08);
-  --success-bg: rgba(45,158,82,0.1);
-  --warn-bg: rgba(245,158,11,0.08);
-  --r: 10px;
-  --r-sm: 7px;
-  --r-lg: 14px;
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#080c08;--bg2:#0e1510;--card:#13191a;
+  --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.13);
+  --text:#e8ede8;--muted:#5a6e5a;--muted2:#7a917a;
+  --grass:#2d9e52;--grass-l:#3dbb63;--grass-dim:#1e6e38;
+  --danger:#ef4444;--danger-bg:rgba(239,68,68,0.08);
+  --success-bg:rgba(45,158,82,0.1);--warn-bg:rgba(245,158,11,0.08);
+  --r:10px;--r-sm:7px;--r-lg:14px;
 }
-body { font-family: 'Syne', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
-
-/* ─── SCROLLBAR ─────────────────────────────────────────────────── */
-::-webkit-scrollbar { width: 4px; height: 4px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #2a3a2a; border-radius: 2px; }
-
-/* ─── HEADER ────────────────────────────────────────────────────── */
-.header {
-  background: var(--bg2);
-  border-bottom: 1px solid var(--border);
-  padding: 0 20px;
-  position: sticky; top: 0; z-index: 100;
-}
-.header-inner {
-  max-width: 1100px; margin: 0 auto;
-  display: flex; align-items: center; gap: 12px;
-  height: 56px;
-}
-.logo { display: flex; align-items: center; gap: 9px; text-decoration: none; }
-.logo-ball {
-  width: 34px; height: 34px; border-radius: 8px;
-  background: var(--grass); display: flex; align-items: center;
-  justify-content: center; font-size: 17px; flex-shrink: 0;
-}
-.logo-text { font-size: 15px; font-weight: 800; color: var(--text); letter-spacing: -0.3px; line-height: 1; }
-.logo-sub { font-size: 10px; color: var(--muted2); font-family: 'DM Mono', monospace; margin-top: 2px; }
-
-.header-gap { flex: 1; }
-
-.rt-badge {
-  display: flex; align-items: center; gap: 5px;
-  padding: 4px 10px; border-radius: 20px;
-  font-size: 11px; font-family: 'DM Mono', monospace;
-  border: 1px solid; transition: all 0.4s;
-}
-.rt-badge.ok { background: rgba(45,158,82,0.1); border-color: rgba(45,158,82,0.25); color: #6ee49a; }
-.rt-badge.wait { background: var(--warn-bg); border-color: rgba(245,158,11,0.25); color: #fcd34d; }
-.rt-badge.err { background: var(--danger-bg); border-color: rgba(239,68,68,0.25); color: #fca5a5; }
-.rt-dot { width: 6px; height: 6px; border-radius: 50%; }
-.rt-badge.ok .rt-dot { background: #3dbb63; animation: blink 2s infinite; }
-.rt-badge.wait .rt-dot { background: #f59e0b; animation: blink 0.6s infinite; }
-.rt-badge.err .rt-dot { background: #ef4444; }
-@keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
-
-.btn-admin-header {
-  padding: 6px 13px; border-radius: var(--r-sm);
-  font-size: 12px; font-weight: 700; font-family: 'Syne', sans-serif;
-  cursor: pointer; transition: all 0.2s; border: 1px solid var(--border2);
-  background: transparent; color: var(--muted2);
-}
-.btn-admin-header:hover { color: var(--text); border-color: var(--border2); }
-.btn-admin-header.on { background: var(--warn-bg); border-color: rgba(245,158,11,0.3); color: #fcd34d; }
-
-/* ─── PLAYER BAR ────────────────────────────────────────────────── */
-.pbar {
-  background: var(--bg2); border-bottom: 1px solid var(--border);
-  padding: 10px 20px;
-}
-.pbar-inner {
-  max-width: 1100px; margin: 0 auto;
-  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
-}
-.pbar-lbl { font-size: 11px; color: var(--muted); font-family: 'DM Mono', monospace; white-space: nowrap; }
-.pbar-input {
-  background: rgba(255,255,255,0.04); border: 1px solid var(--border);
-  border-radius: var(--r-sm); padding: 7px 12px;
-  color: var(--text); font-family: 'Syne', sans-serif; font-size: 14px;
-  font-weight: 600; width: 210px; outline: none; transition: border-color 0.2s;
-}
-.pbar-input:focus { border-color: var(--grass); }
-.pbar-input::placeholder { color: #374741; }
-.pbar-greeting { font-size: 12px; color: var(--muted2); font-family: 'DM Mono', monospace; }
-
-/* ─── TABS ──────────────────────────────────────────────────────── */
-.tabs-wrap {
-  background: var(--bg2); border-bottom: 1px solid var(--border);
-  padding: 0 20px; overflow-x: auto;
-}
-.tabs { max-width: 1100px; margin: 0 auto; display: flex; }
-.tab {
-  padding: 13px 18px 11px; font-size: 13px; font-weight: 600;
-  cursor: pointer; border-bottom: 2px solid transparent;
-  color: var(--muted); white-space: nowrap; transition: all 0.2s;
-  background: none; border-top: none; border-left: none; border-right: none;
-  font-family: 'Syne', sans-serif; display: flex; align-items: center; gap: 7px;
-}
-.tab:hover { color: var(--text); }
-.tab.on { color: var(--text); border-bottom-color: var(--grass); }
-.tab .badge {
-  background: rgba(45,158,82,0.15); color: var(--grass-l);
-  padding: 1px 7px; border-radius: 10px; font-size: 10px;
-  font-family: 'DM Mono', monospace;
-}
-.cdot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
-
-/* ─── MAIN ──────────────────────────────────────────────────────── */
-.main { max-width: 1100px; margin: 0 auto; padding: 22px 20px 60px; }
-
-/* ─── FILTER BAR ────────────────────────────────────────────────── */
-.fbar { display: flex; gap: 7px; margin-bottom: 22px; align-items: center; flex-wrap: wrap; }
-.fbar-lbl { font-size: 11px; color: var(--muted); font-family: 'DM Mono', monospace; }
-.fbtn {
-  padding: 5px 14px; border-radius: 20px; font-size: 12px; font-weight: 600;
-  font-family: 'Syne', sans-serif; cursor: pointer; transition: all 0.18s;
-  border: 1px solid var(--border); background: transparent; color: var(--muted);
-}
-.fbtn:hover { border-color: var(--border2); color: var(--text); }
-.fbtn.on { background: var(--grass); border-color: var(--grass); color: #fff; }
-.fselect {
-  background: rgba(255,255,255,0.04); border: 1px solid var(--border);
-  border-radius: 20px; padding: 4px 12px; color: var(--text); font-size: 11px;
-  font-family: 'DM Mono', monospace; cursor: pointer; outline: none; -webkit-appearance: none;
-}
-
-/* ─── DATE GROUP ────────────────────────────────────────────────── */
-.dg { margin-bottom: 30px; }
-.dg-head {
-  display: flex; align-items: center; gap: 12px; margin-bottom: 14px;
-}
-.dg-lbl {
-  font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;
-  color: var(--muted2); font-family: 'DM Mono', monospace; white-space: nowrap;
-}
-.dg-line { flex: 1; height: 1px; background: var(--border); }
-
-/* ─── TURNO GRID ────────────────────────────────────────────────── */
-.tgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 11px; }
-
-/* ─── TURNO CARD ────────────────────────────────────────────────── */
-.tc {
-  background: var(--card); border: 1px solid var(--border);
-  border-radius: var(--r-lg); overflow: hidden; transition: transform 0.18s, border-color 0.18s;
-}
-.tc:hover { transform: translateY(-1px); border-color: var(--border2); }
-.tc.lleno { border-color: rgba(239,68,68,0.18); }
-.tc.cancelado { opacity: 0.45; pointer-events: none; }
-.tc.urgente { border-color: rgba(245,158,11,0.3); }
-
-/* Card top bar (cancha color) */
-.tc-bar { height: 3px; }
-
-/* Card header */
-.tc-head {
-  padding: 13px 15px 10px;
-  display: flex; justify-content: space-between; align-items: flex-start;
-  border-bottom: 1px solid var(--border);
-}
-.tc-left {}
-.tc-nombre { font-size: 13px; font-weight: 700; color: var(--text); line-height: 1.2; margin-bottom: 2px; }
-.tc-meta { font-size: 10px; color: var(--muted); font-family: 'DM Mono', monospace; display: flex; align-items: center; gap: 6px; }
-.tag-fijo {
-  background: rgba(59,130,246,0.12); border: 1px solid rgba(59,130,246,0.25);
-  color: #93c5fd; padding: 1px 7px; border-radius: 10px; font-size: 9px;
-  font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
-}
-.tag-ocas {
-  background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.22);
-  color: #fcd34d; padding: 1px 7px; border-radius: 10px; font-size: 9px;
-  font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
-}
-.tc-estado {
-  padding: 3px 9px; border-radius: 12px; font-size: 10px; font-weight: 700;
-  font-family: 'DM Mono', monospace; flex-shrink: 0; margin-left: 8px;
-}
-.est-disponible { background: var(--success-bg); color: #6ee49a; }
-.est-lleno { background: var(--danger-bg); color: #fca5a5; }
-.est-cancelado { background: rgba(80,80,80,0.2); color: var(--muted2); }
-
-/* Card body */
-.tc-body { padding: 11px 15px 13px; }
-
-/* Slots visual */
-.slots { display: flex; gap: 3px; margin-bottom: 8px; flex-wrap: wrap; }
-.slot {
-  width: 20px; height: 9px; border-radius: 3px;
-  transition: background 0.3s, border-color 0.3s;
-  border: 1px solid rgba(255,255,255,0.07);
-}
-.slot.libre { background: rgba(255,255,255,0.04); }
-.slot.ocup { background: var(--grass-dim); border-color: rgba(45,158,82,0.4); }
-.slot.yo { background: #d97706; border-color: #f59e0b; }
-.slots-info { font-size: 10px; color: var(--muted); font-family: 'DM Mono', monospace; margin-bottom: 9px; }
-.slots-info strong { color: var(--grass-l); }
-
-/* Jugadores pills */
-.pills { display: flex; flex-wrap: wrap; gap: 5px; min-height: 20px; margin-bottom: 11px; }
-.pill {
-  background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08);
-  border-radius: 20px; padding: 2px 9px; font-size: 11px; color: #c9d5c9;
-  display: flex; align-items: center; gap: 4px; font-weight: 600;
-}
-.pill.yo { background: rgba(217,119,6,0.1); border-color: rgba(245,158,11,0.3); color: #fcd34d; }
-.pill-x {
-  background: none; border: none; color: var(--muted); cursor: pointer;
-  font-size: 14px; line-height: 1; padding: 0; display: flex; align-items: center;
-}
-.pill-x:hover { color: var(--danger); }
-.pill-wa {
-  font-size: 9px; color: var(--muted); font-family: 'DM Mono', monospace;
-  opacity: 0.7;
-}
-
-/* Actions */
-.tc-actions { display: flex; gap: 7px; }
-.btn-res {
-  flex: 1; background: var(--grass); border: none; border-radius: var(--r-sm);
-  padding: 9px; color: #fff; font-size: 13px; font-weight: 700;
-  font-family: 'Syne', sans-serif; cursor: pointer; transition: background 0.18s;
-}
-.btn-res:hover { background: var(--grass-l); }
-.btn-res:disabled { background: rgba(255,255,255,0.06); color: var(--muted); cursor: not-allowed; }
-.btn-baj {
-  padding: 9px 12px; background: var(--danger-bg); border: 1px solid rgba(239,68,68,0.22);
-  border-radius: var(--r-sm); color: #fca5a5; font-size: 12px; font-weight: 700;
-  font-family: 'Syne', sans-serif; cursor: pointer; transition: all 0.18s; white-space: nowrap;
-}
-.btn-baj:hover { background: rgba(239,68,68,0.16); }
-
-/* WhatsApp button */
-.btn-wa {
-  display: flex; align-items: center; justify-content: center; gap: 5px;
-  padding: 7px 12px; border-radius: var(--r-sm); margin-top: 7px;
-  background: rgba(37,211,102,0.07); border: 1px solid rgba(37,211,102,0.2);
-  color: #5de891; font-size: 11px; font-weight: 700; font-family: 'DM Mono', monospace;
-  text-decoration: none; width: 100%; cursor: pointer; text-align: center;
-  transition: all 0.18s;
-}
-.btn-wa:hover { background: rgba(37,211,102,0.14); }
-
-/* Admin strip */
-.tc-admin {
-  border-top: 1px solid var(--border); padding: 8px 15px;
-  background: rgba(245,158,11,0.03); display: flex; gap: 6px; flex-wrap: wrap;
-}
-.adm-btn {
-  padding: 4px 9px; border-radius: 6px; font-size: 9px; font-weight: 700;
-  font-family: 'DM Mono', monospace; cursor: pointer; border: 1px solid;
-  text-transform: uppercase; letter-spacing: 0.3px; transition: all 0.15s;
-}
-.adm-cancel { background: var(--danger-bg); border-color: rgba(239,68,68,0.2); color: #fca5a5; }
-.adm-cancel:hover { background: rgba(239,68,68,0.18); }
-.adm-react { background: var(--success-bg); border-color: rgba(45,158,82,0.2); color: #6ee49a; }
-.adm-react:hover { background: rgba(45,158,82,0.2); }
-.adm-clear { background: rgba(100,100,100,0.08); border-color: rgba(120,120,120,0.2); color: var(--muted2); }
-.adm-clear:hover { background: rgba(100,100,100,0.18); }
-
-/* ─── EMPTY STATE ───────────────────────────────────────────────── */
-.empty { text-align: center; padding: 56px 20px; color: var(--muted); }
-.empty-icon { font-size: 44px; margin-bottom: 12px; }
-.empty p { font-size: 14px; line-height: 1.6; }
-
-/* ─── LOADING ───────────────────────────────────────────────────── */
-.loading { text-align: center; padding: 60px; color: var(--muted); font-family: 'DM Mono', monospace; font-size: 13px; }
-
-/* ─── ADMIN PANEL ───────────────────────────────────────────────── */
-.apanel {
-  position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 300;
-  display: flex; align-items: flex-start; justify-content: flex-end;
-}
-.apanel-drawer {
-  background: var(--bg2); border-left: 1px solid var(--border2);
-  width: 380px; max-width: 100vw; height: 100vh; overflow-y: auto;
-  padding: 24px 20px; display: flex; flex-direction: column; gap: 24px;
-}
-.apanel h2 { font-size: 16px; font-weight: 800; }
-.apanel-close {
-  position: absolute; top: 16px; right: 400px;
-  background: rgba(255,255,255,0.05); border: 1px solid var(--border);
-  border-radius: 50%; width: 32px; height: 32px; cursor: pointer; color: var(--text);
-  display: flex; align-items: center; justify-content: center; font-size: 16px;
-}
-.form-section { display: flex; flex-direction: column; gap: 8px; }
-.form-lbl { font-size: 11px; color: var(--muted2); font-family: 'DM Mono', monospace; margin-bottom: 2px; }
-.form-input, .form-select {
-  background: rgba(255,255,255,0.04); border: 1px solid var(--border);
-  border-radius: var(--r-sm); padding: 9px 12px; color: var(--text);
-  font-family: 'Syne', sans-serif; font-size: 13px; outline: none; width: 100%;
-  transition: border-color 0.2s;
-}
-.form-input:focus, .form-select:focus { border-color: var(--grass); }
-.form-row { display: flex; gap: 8px; }
-.form-row .form-input, .form-row .form-select { flex: 1; }
-.btn-primary {
-  background: var(--grass); border: none; border-radius: var(--r-sm);
-  padding: 10px; color: #fff; font-size: 13px; font-weight: 700;
-  font-family: 'Syne', sans-serif; cursor: pointer; width: 100%; transition: background 0.18s;
-}
-.btn-primary:hover { background: var(--grass-l); }
-.btn-secondary {
-  background: transparent; border: 1px solid var(--border); border-radius: var(--r-sm);
-  padding: 10px; color: var(--muted2); font-size: 13px; font-weight: 600;
-  font-family: 'Syne', sans-serif; cursor: pointer; width: 100%; transition: all 0.18s;
-}
-.btn-secondary:hover { border-color: var(--border2); color: var(--text); }
-.adivider { height: 1px; background: var(--border); margin: 4px 0; }
-.series-item {
-  background: rgba(255,255,255,0.03); border: 1px solid var(--border);
-  border-radius: var(--r-sm); padding: 10px 12px;
-  display: flex; align-items: center; justify-content: space-between; gap: 8px;
-}
-.series-item-name { font-size: 12px; font-weight: 600; }
-.series-item-meta { font-size: 10px; color: var(--muted); font-family: 'DM Mono', monospace; margin-top: 2px; }
-.series-del { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 16px; }
-.series-del:hover { color: var(--danger); }
-.check-row { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--muted2); cursor: pointer; }
-.check-row input { accent-color: var(--grass); width: 15px; height: 15px; }
-
-/* ─── MODAL (admin password / general) ─────────────────────────── */
-.modal-bg {
-  position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 500;
-  display: flex; align-items: center; justify-content: center; padding: 20px;
-}
-.modal {
-  background: #141e14; border: 1px solid var(--border2);
-  border-radius: var(--r-lg); padding: 26px; max-width: 360px; width: 100%;
-}
-.modal h2 { font-size: 17px; font-weight: 800; margin-bottom: 6px; }
-.modal p { font-size: 12px; color: var(--muted2); margin-bottom: 18px; line-height: 1.6; }
-.modal-row { display: flex; gap: 8px; }
-.modal input {
-  background: rgba(255,255,255,0.04); border: 1px solid var(--border);
-  border-radius: var(--r-sm); padding: 9px 12px; color: var(--text);
-  font-size: 15px; font-family: 'Syne', sans-serif; width: 100%;
-  outline: none; margin-bottom: 14px;
-}
-.modal input:focus { border-color: var(--grass); }
-.modal-ok {
-  flex: 1; background: var(--grass); border: none; border-radius: var(--r-sm);
-  padding: 10px; color: #fff; font-size: 13px; font-weight: 700;
-  font-family: 'Syne', sans-serif; cursor: pointer;
-}
-.modal-ok:hover { background: var(--grass-l); }
-.modal-cancel {
-  padding: 10px 16px; background: transparent; border: 1px solid var(--border);
-  border-radius: var(--r-sm); color: var(--muted2); font-size: 13px;
-  font-family: 'Syne', sans-serif; cursor: pointer;
-}
-.modal-cancel:hover { color: var(--text); }
-
-/* ─── TOAST ─────────────────────────────────────────────────────── */
-.toast-wrap {
-  position: fixed; bottom: 20px; right: 20px; z-index: 9999;
-  display: flex; flex-direction: column; gap: 7px;
-}
-.toast {
-  padding: 10px 16px; border-radius: var(--r); font-size: 13px;
-  font-weight: 600; border: 1px solid; animation: tin 0.22s ease;
-  max-width: 300px; font-family: 'Syne', sans-serif;
-}
-.toast.ok { background: rgba(45,158,82,0.15); border-color: rgba(45,158,82,0.3); color: #6ee49a; }
-.toast.err { background: var(--danger-bg); border-color: rgba(239,68,68,0.3); color: #fca5a5; }
-.toast.inf { background: rgba(59,130,246,0.12); border-color: rgba(59,130,246,0.3); color: #93c5fd; }
-@keyframes tin { from { transform: translateX(14px); opacity: 0; } to { opacity: 1; transform: none; } }
-
-/* ─── RESPONSIVE ────────────────────────────────────────────────── */
-@media (max-width: 600px) {
-  .main { padding: 16px 14px 60px; }
-  .tgrid { grid-template-columns: 1fr; }
-  .pbar-input { width: 100%; }
-  .apanel-close { display: none; }
+body{font-family:'Syne',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-thumb{background:#2a3a2a;border-radius:2px}
+.header{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 20px;position:sticky;top:0;z-index:100}
+.header-inner{max-width:1100px;margin:0 auto;display:flex;align-items:center;gap:12px;height:56px}
+.logo{display:flex;align-items:center;gap:9px;text-decoration:none}
+.logo-ball{width:34px;height:34px;border-radius:8px;background:var(--grass);display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
+.logo-text{font-size:15px;font-weight:800;color:var(--text);letter-spacing:-0.3px;line-height:1}
+.logo-sub{font-size:10px;color:var(--muted2);font-family:'DM Mono',monospace;margin-top:2px}
+.hgap{flex:1}
+.rt-badge{display:flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;font-size:11px;font-family:'DM Mono',monospace;border:1px solid;transition:all .4s}
+.rt-badge.ok{background:rgba(45,158,82,0.1);border-color:rgba(45,158,82,0.25);color:#6ee49a}
+.rt-badge.wait{background:var(--warn-bg);border-color:rgba(245,158,11,0.25);color:#fcd34d}
+.rt-badge.err{background:var(--danger-bg);border-color:rgba(239,68,68,0.25);color:#fca5a5}
+.rt-dot{width:6px;height:6px;border-radius:50%}
+.rt-badge.ok .rt-dot{background:#3dbb63;animation:blink 2s infinite}
+.rt-badge.wait .rt-dot{background:#f59e0b;animation:blink .6s infinite}
+.rt-badge.err .rt-dot{background:#ef4444}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.btn-adm-h{padding:6px 13px;border-radius:var(--r-sm);font-size:12px;font-weight:700;font-family:'Syne',sans-serif;cursor:pointer;transition:all .2s;border:1px solid var(--border2);background:transparent;color:var(--muted2)}
+.btn-adm-h:hover{color:var(--text)}
+.btn-adm-h.on{background:var(--warn-bg);border-color:rgba(245,158,11,0.3);color:#fcd34d}
+.pbar{background:var(--bg2);border-bottom:1px solid var(--border);padding:10px 20px}
+.pbar-inner{max-width:1100px;margin:0 auto;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.pbar-lbl{font-size:11px;color:var(--muted);font-family:'DM Mono',monospace;white-space:nowrap}
+.pbar-input{background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:var(--r-sm);padding:7px 12px;color:var(--text);font-family:'Syne',sans-serif;font-size:14px;font-weight:600;width:210px;outline:none;transition:border-color .2s}
+.pbar-input:focus{border-color:var(--grass)}
+.pbar-input::placeholder{color:#374741}
+.pbar-greet{font-size:12px;color:var(--muted2);font-family:'DM Mono',monospace}
+.tabs-wrap{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 20px;overflow-x:auto}
+.tabs{max-width:1100px;margin:0 auto;display:flex}
+.tab{padding:13px 18px 11px;font-size:13px;font-weight:600;cursor:pointer;border-bottom:2px solid transparent;color:var(--muted);white-space:nowrap;transition:all .2s;background:none;border-top:none;border-left:none;border-right:none;font-family:'Syne',sans-serif;display:flex;align-items:center;gap:7px}
+.tab:hover{color:var(--text)}
+.tab.on{color:var(--text);border-bottom-color:var(--grass)}
+.tab .badge{background:rgba(45,158,82,0.15);color:var(--grass-l);padding:1px 7px;border-radius:10px;font-size:10px;font-family:'DM Mono',monospace}
+.cdot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.main{max-width:1100px;margin:0 auto;padding:22px 20px 100px}
+.fbar{display:flex;gap:7px;margin-bottom:22px;align-items:center;flex-wrap:wrap}
+.fbar-lbl{font-size:11px;color:var(--muted);font-family:'DM Mono',monospace}
+.fbtn{padding:5px 14px;border-radius:20px;font-size:12px;font-weight:600;font-family:'Syne',sans-serif;cursor:pointer;transition:all .18s;border:1px solid var(--border);background:transparent;color:var(--muted)}
+.fbtn:hover{border-color:var(--border2);color:var(--text)}
+.fbtn.on{background:var(--grass);border-color:var(--grass);color:#fff}
+.fselect{background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:20px;padding:4px 12px;color:var(--text);font-size:11px;font-family:'DM Mono',monospace;cursor:pointer;outline:none;-webkit-appearance:none}
+.dg{margin-bottom:30px}
+.dg-head{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.dg-lbl{font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted2);font-family:'DM Mono',monospace;white-space:nowrap}
+.dg-line{flex:1;height:1px;background:var(--border)}
+.tgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:11px}
+.tc{background:var(--card);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;transition:transform .18s,border-color .18s}
+.tc:hover{transform:translateY(-1px);border-color:var(--border2)}
+.tc.lleno{border-color:rgba(239,68,68,0.2)}
+.tc.cancelado{opacity:.45}
+.tc.urgente{border-color:rgba(245,158,11,0.3)}
+.tc-bar{height:3px}
+.tc-head{padding:13px 15px 10px;display:flex;justify-content:space-between;align-items:flex-start;border-bottom:1px solid var(--border)}
+.tc-nombre{font-size:13px;font-weight:700;color:var(--text);line-height:1.2;margin-bottom:2px}
+.tc-meta{font-size:10px;color:var(--muted);font-family:'DM Mono',monospace;display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:3px}
+.tag-fijo{background:rgba(59,130,246,0.12);border:1px solid rgba(59,130,246,0.25);color:#93c5fd;padding:1px 7px;border-radius:10px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.5px}
+.tag-ocas{background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.22);color:#fcd34d;padding:1px 7px;border-radius:10px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.5px}
+.tc-estado{padding:3px 9px;border-radius:12px;font-size:10px;font-weight:700;font-family:'DM Mono',monospace;flex-shrink:0;margin-left:8px}
+.est-disponible{background:var(--success-bg);color:#6ee49a}
+.est-lleno{background:var(--danger-bg);color:#fca5a5}
+.est-cancelado{background:rgba(80,80,80,0.2);color:var(--muted2)}
+.tc-body{padding:11px 15px 13px}
+.slots{display:flex;gap:3px;margin-bottom:8px;flex-wrap:wrap}
+.slot{width:20px;height:9px;border-radius:3px;transition:background .3s,border-color .3s;border:1px solid rgba(255,255,255,0.07)}
+.slot.libre{background:rgba(255,255,255,0.04)}
+.slot.ocup{background:var(--grass-dim);border-color:rgba(45,158,82,0.4)}
+.slot.yo{background:#d97706;border-color:#f59e0b}
+.slots-info{font-size:10px;color:var(--muted);font-family:'DM Mono',monospace;margin-bottom:9px}
+.slots-info strong{color:var(--grass-l)}
+.pills{display:flex;flex-wrap:wrap;gap:5px;min-height:20px;margin-bottom:11px}
+.pill{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:20px;padding:2px 9px;font-size:11px;color:#c9d5c9;display:flex;align-items:center;gap:4px;font-weight:600}
+.pill.yo{background:rgba(217,119,6,0.1);border-color:rgba(245,158,11,0.3);color:#fcd34d}
+.pill-x{background:none;border:none;color:var(--muted);cursor:pointer;font-size:14px;line-height:1;padding:0;display:flex;align-items:center}
+.pill-x:hover{color:var(--danger)}
+.pill-wa{font-size:9px;color:var(--muted);font-family:'DM Mono',monospace;opacity:.7}
+.tc-actions{display:flex;gap:7px;flex-wrap:wrap}
+.btn-res{flex:1;background:var(--grass);border:none;border-radius:var(--r-sm);padding:9px;color:#fff;font-size:13px;font-weight:700;font-family:'Syne',sans-serif;cursor:pointer;transition:background .18s;min-width:120px}
+.btn-res:hover{background:var(--grass-l)}
+.btn-res:disabled{background:rgba(255,255,255,0.06);color:var(--muted);cursor:not-allowed}
+.btn-baj{padding:9px 12px;background:var(--danger-bg);border:1px solid rgba(239,68,68,0.22);border-radius:var(--r-sm);color:#fca5a5;font-size:12px;font-weight:700;font-family:'Syne',sans-serif;cursor:pointer;transition:all .18s;white-space:nowrap}
+.btn-baj:hover{background:rgba(239,68,68,0.16)}
+.btn-wa{display:flex;align-items:center;justify-content:center;gap:5px;padding:7px 12px;border-radius:var(--r-sm);margin-top:7px;background:rgba(37,211,102,0.07);border:1px solid rgba(37,211,102,0.2);color:#5de891;font-size:11px;font-weight:700;font-family:'DM Mono',monospace;text-decoration:none;width:100%;cursor:pointer;text-align:center;transition:all .18s}
+.btn-wa:hover{background:rgba(37,211,102,0.14)}
+.tc-admin{border-top:1px solid var(--border);padding:9px 15px;background:rgba(245,158,11,0.03);display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.adm-btn{padding:5px 10px;border-radius:6px;font-size:10px;font-weight:700;font-family:'DM Mono',monospace;cursor:pointer;border:1px solid;text-transform:uppercase;letter-spacing:.3px;transition:all .15s}
+.adm-add{background:var(--success-bg);border-color:rgba(45,158,82,0.3);color:#6ee49a}
+.adm-add:hover{background:rgba(45,158,82,0.2)}
+.adm-bajar{background:var(--warn-bg);border-color:rgba(245,158,11,0.25);color:#fcd34d}
+.adm-bajar:hover{background:rgba(245,158,11,0.15)}
+.adm-cancel{background:var(--danger-bg);border-color:rgba(239,68,68,0.2);color:#fca5a5}
+.adm-cancel:hover{background:rgba(239,68,68,0.18)}
+.adm-react{background:var(--success-bg);border-color:rgba(45,158,82,0.2);color:#6ee49a}
+.adm-react:hover{background:rgba(45,158,82,0.2)}
+.adm-del{background:rgba(139,0,0,0.2);border-color:rgba(239,68,68,0.4);color:#fca5a5;font-weight:800}
+.adm-del:hover{background:rgba(239,68,68,0.3)}
+.empty{text-align:center;padding:56px 20px;color:var(--muted)}
+.empty-icon{font-size:44px;margin-bottom:12px}
+.empty p{font-size:14px;line-height:1.6}
+.loading{text-align:center;padding:60px;color:var(--muted);font-family:'DM Mono',monospace;font-size:13px}
+.apanel{position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:300;display:flex;align-items:flex-start;justify-content:flex-end}
+.apanel-drawer{background:var(--bg2);border-left:1px solid var(--border2);width:380px;max-width:100vw;height:100vh;overflow-y:auto;padding:24px 20px;display:flex;flex-direction:column;gap:20px}
+.apanel h2{font-size:16px;font-weight:800}
+.form-section{display:flex;flex-direction:column;gap:8px}
+.form-lbl{font-size:11px;color:var(--muted2);font-family:'DM Mono',monospace;margin-bottom:2px}
+.form-input,.form-select{background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:var(--r-sm);padding:9px 12px;color:var(--text);font-family:'Syne',sans-serif;font-size:13px;outline:none;width:100%;transition:border-color .2s}
+.form-input:focus,.form-select:focus{border-color:var(--grass)}
+.form-row{display:flex;gap:8px}
+.form-row .form-input,.form-row .form-select{flex:1}
+.btn-primary{background:var(--grass);border:none;border-radius:var(--r-sm);padding:10px;color:#fff;font-size:13px;font-weight:700;font-family:'Syne',sans-serif;cursor:pointer;width:100%;transition:background .18s}
+.btn-primary:hover{background:var(--grass-l)}
+.btn-secondary{background:transparent;border:1px solid var(--border);border-radius:var(--r-sm);padding:10px;color:var(--muted2);font-size:13px;font-weight:600;font-family:'Syne',sans-serif;cursor:pointer;width:100%;transition:all .18s}
+.btn-secondary:hover{border-color:var(--border2);color:var(--text)}
+.adivider{height:1px;background:var(--border);margin:4px 0}
+.section-title{font-size:12px;font-weight:700;color:var(--muted2);text-transform:uppercase;letter-spacing:.5px}
+.series-item{background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:var(--r-sm);padding:10px 12px;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.series-item-name{font-size:12px;font-weight:600}
+.series-item-meta{font-size:10px;color:var(--muted);font-family:'DM Mono',monospace;margin-top:2px}
+.series-del{background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px}
+.series-del:hover{color:var(--danger)}
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:500;display:flex;align-items:center;justify-content:center;padding:20px}
+.modal{background:#141e14;border:1px solid var(--border2);border-radius:var(--r-lg);padding:26px;max-width:380px;width:100%}
+.modal h2{font-size:17px;font-weight:800;margin-bottom:6px}
+.modal p{font-size:12px;color:var(--muted2);margin-bottom:14px;line-height:1.6}
+.modal-row{display:flex;gap:8px;margin-top:4px}
+.modal input,.modal select{background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:var(--r-sm);padding:9px 12px;color:var(--text);font-size:14px;font-family:'Syne',sans-serif;width:100%;outline:none;margin-bottom:10px}
+.modal input:focus,.modal select:focus{border-color:var(--grass)}
+.modal-lbl{font-size:11px;color:var(--muted2);font-family:'DM Mono',monospace;margin-bottom:4px;display:block}
+.modal-ok{flex:1;background:var(--grass);border:none;border-radius:var(--r-sm);padding:10px;color:#fff;font-size:13px;font-weight:700;font-family:'Syne',sans-serif;cursor:pointer}
+.modal-ok:hover{background:var(--grass-l)}
+.modal-ok.danger{background:rgba(180,30,30,0.8)}
+.modal-ok.danger:hover{background:var(--danger)}
+.modal-cancel{padding:10px 16px;background:transparent;border:1px solid var(--border);border-radius:var(--r-sm);color:var(--muted2);font-size:13px;font-family:'Syne',sans-serif;cursor:pointer}
+.modal-cancel:hover{color:var(--text)}
+.toast-wrap{position:fixed;bottom:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:7px}
+.toast{padding:10px 16px;border-radius:var(--r);font-size:13px;font-weight:600;border:1px solid;animation:tin .22s ease;max-width:300px;font-family:'Syne',sans-serif}
+.toast.ok{background:rgba(45,158,82,0.15);border-color:rgba(45,158,82,0.3);color:#6ee49a}
+.toast.err{background:var(--danger-bg);border-color:rgba(239,68,68,0.3);color:#fca5a5}
+.toast.inf{background:rgba(59,130,246,0.12);border-color:rgba(59,130,246,0.3);color:#93c5fd}
+@keyframes tin{from{transform:translateX(14px);opacity:0}to{opacity:1;transform:none}}
+.fab{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:200;background:var(--grass);border:none;border-radius:30px;padding:13px 28px;color:#fff;font-size:14px;font-weight:700;font-family:'Syne',sans-serif;cursor:pointer;box-shadow:0 4px 20px rgba(45,158,82,0.35);transition:all .2s;display:flex;align-items:center;gap:8px;white-space:nowrap}
+.fab:hover{background:var(--grass-l);transform:translateX(-50%) translateY(-2px)}
+.mrow{display:flex;gap:8px}
+.mrow>div{flex:1}
+@media(max-width:600px){
+  .main{padding:16px 14px 100px}
+  .tgrid{grid-template-columns:1fr}
+  .pbar-input{width:100%}
+  .fab{width:calc(100% - 32px)}
 }
 </style>
 </head>
 <body>
 
-<!-- ═══════════════════════════ HEADER ═══════════════════════════════ -->
 <div class="header">
   <div class="header-inner">
-    <a class="logo" href="#">
-      <div class="logo-ball">⚽</div>
-      <div>
-        <div class="logo-text">Canchas</div>
-        <div class="logo-sub">RESERVAS EN VIVO</div>
-      </div>
-    </a>
-    <div class="header-gap"></div>
+    <a class="logo" href="#"><div class="logo-ball">⚽</div><div><div class="logo-text">Canchas</div><div class="logo-sub">RESERVAS EN VIVO</div></div></a>
+    <div class="hgap"></div>
     <div class="rt-badge wait" id="rt-badge"><div class="rt-dot"></div><span id="rt-txt">Conectando</span></div>
-    <button class="btn-admin-header" id="btn-adm" onclick="openAdminFlow()">Admin</button>
+    <button class="btn-adm-h" id="btn-adm" onclick="openAdminFlow()">Admin</button>
   </div>
 </div>
 
-<!-- ═════════════════════════ PLAYER BAR ═════════════════════════════ -->
 <div class="pbar">
   <div class="pbar-inner">
     <span class="pbar-lbl">Tu nombre:</span>
     <input class="pbar-input" id="pname" type="text" placeholder="Escribí tu nombre..." maxlength="30"/>
-    <span class="pbar-greeting" id="greeting"></span>
+    <span class="pbar-greet" id="greeting"></span>
   </div>
 </div>
 
-<!-- ══════════════════════════ TABS NAV ══════════════════════════════ -->
 <div class="tabs-wrap">
-  <div class="tabs" id="tabs">
+  <div class="tabs">
     <button class="tab on" onclick="setTab('todas')" id="tab-todas">Todas</button>
-    <button class="tab" onclick="setTab('c1')" id="tab-c1">
-      <span class="cdot" style="background:#22c55e"></span> Cancha 1 — F6
-      <span class="badge" id="bc1">0</span>
-    </button>
-    <button class="tab" onclick="setTab('c2')" id="tab-c2">
-      <span class="cdot" style="background:#3b82f6"></span> Cancha 2 — F6
-      <span class="badge" id="bc2">0</span>
-    </button>
-    <button class="tab" onclick="setTab('c3')" id="tab-c3">
-      <span class="cdot" style="background:#f59e0b"></span> Cancha 3 — F5
-      <span class="badge" id="bc3">0</span>
-    </button>
-    <button class="tab" onclick="setTab('mis')" id="tab-mis">
-      Mis reservas <span class="badge" id="bmis">0</span>
-    </button>
+    <button class="tab" onclick="setTab('c1')" id="tab-c1"><span class="cdot" style="background:#22c55e"></span>Cancha 1 — F6<span class="badge" id="bc1">0</span></button>
+    <button class="tab" onclick="setTab('c2')" id="tab-c2"><span class="cdot" style="background:#3b82f6"></span>Cancha 2 — F6<span class="badge" id="bc2">0</span></button>
+    <button class="tab" onclick="setTab('c3')" id="tab-c3"><span class="cdot" style="background:#f59e0b"></span>Cancha 3 — F5<span class="badge" id="bc3">0</span></button>
+    <button class="tab" onclick="setTab('mis')" id="tab-mis">Mis reservas<span class="badge" id="bmis">0</span></button>
   </div>
 </div>
 
-<!-- ══════════════════════════ MAIN CONTENT ══════════════════════════ -->
 <div class="main">
   <div class="fbar" id="fbar">
     <span class="fbar-lbl">Mostrar:</span>
@@ -455,108 +208,99 @@ body { font-family: 'Syne', sans-serif; background: var(--bg); color: var(--text
     <button class="fbtn" onclick="setF('fijo')" id="f-fijo">Fijos</button>
     <button class="fbtn" onclick="setF('ocasional')" id="f-ocas">Ocasionales</button>
     <span class="fbar-lbl" style="margin-left:6px">Fecha:</span>
-    <select class="fselect" id="fdate" onchange="render()">
-      <option value="">Todos</option>
-    </select>
+    <select class="fselect" id="fdate" onchange="render()"><option value="">Todos</option></select>
   </div>
   <div id="content"><div class="loading">Cargando turnos...</div></div>
 </div>
 
-<!-- ══════════════════════════ ADMIN PANEL ═══════════════════════════ -->
+<!-- FAB cliente -->
+<button class="fab" onclick="openClienteTurno()">+ Solicitar turno nuevo</button>
+
+<!-- ADMIN PANEL -->
 <div class="apanel" id="apanel" style="display:none">
   <div style="position:relative;display:flex;height:100vh">
     <div class="apanel-drawer">
       <div style="display:flex;align-items:center;justify-content:space-between">
         <h2>🔧 Panel Admin</h2>
-        <button onclick="closeAdmin()" style="background:none;border:none;color:var(--muted2);cursor:pointer;font-size:20px;line-height:1">×</button>
+        <button onclick="closeAdmin()" style="background:none;border:none;color:var(--muted2);cursor:pointer;font-size:22px;line-height:1">×</button>
       </div>
-
-      <!-- Add occasional turn -->
       <div class="form-section">
-        <div style="font-size:12px;font-weight:700;margin-bottom:4px;color:var(--muted2);text-transform:uppercase;letter-spacing:0.5px">Agregar turno ocasional</div>
+        <div class="section-title">Agregar turno</div>
+        <div class="form-lbl">Nombre del turno / dueño</div>
+        <input class="form-input" id="a-nombre" type="text" placeholder="ej: Los del Tano — Martes"/>
         <div class="form-row">
-          <div style="flex:1">
-            <div class="form-lbl">Cancha</div>
+          <div style="flex:1"><div class="form-lbl">Cancha</div>
             <select class="form-select" id="a-cancha">
               <option value="c1">Cancha 1 — F6</option>
               <option value="c2">Cancha 2 — F6</option>
               <option value="c3">Cancha 3 — F5</option>
             </select>
           </div>
-          <div style="flex:1">
-            <div class="form-lbl">Hora</div>
+          <div style="flex:1"><div class="form-lbl">Hora</div>
             <input class="form-input" id="a-hora" type="time" value="20:00"/>
           </div>
         </div>
         <div class="form-lbl">Fecha</div>
         <input class="form-input" id="a-fecha" type="date"/>
-        <div class="form-lbl">Nombre del turno (dueño o grupo)</div>
-        <input class="form-input" id="a-nombre" type="text" placeholder="ej: Los Martes de Juan"/>
-        <button class="btn-primary" onclick="addTurno()">+ Agregar turno ocasional</button>
+        <div class="form-lbl">Estado inicial</div>
+        <select class="form-select" id="a-estado">
+          <option value="lleno">Completo (lleno)</option>
+          <option value="disponible">Con lugares disponibles</option>
+        </select>
+        <button class="btn-primary" onclick="addTurnoAdmin()">+ Agregar turno</button>
       </div>
-
       <div class="adivider"></div>
-
-      <!-- Fixed recurring series -->
       <div class="form-section">
-        <div style="font-size:12px;font-weight:700;margin-bottom:4px;color:var(--muted2);text-transform:uppercase;letter-spacing:0.5px">Turnos fijos recurrentes</div>
-
+        <div class="section-title">Turnos fijos recurrentes</div>
         <div class="form-lbl">Nombre de la serie</div>
         <input class="form-input" id="s-nombre" type="text" placeholder="ej: Martes de las 21 — Tano"/>
         <div class="form-row">
-          <div style="flex:1">
-            <div class="form-lbl">Cancha</div>
+          <div style="flex:1"><div class="form-lbl">Cancha</div>
             <select class="form-select" id="s-cancha">
               <option value="c1">Cancha 1</option>
               <option value="c2">Cancha 2</option>
               <option value="c3">Cancha 3</option>
             </select>
           </div>
-          <div style="flex:1">
-            <div class="form-lbl">Día</div>
+          <div style="flex:1"><div class="form-lbl">Día</div>
             <select class="form-select" id="s-dia">
-              <option value="0">Domingo</option>
-              <option value="1">Lunes</option>
-              <option value="2">Martes</option>
-              <option value="3">Miércoles</option>
-              <option value="4">Jueves</option>
-              <option value="5">Viernes</option>
-              <option value="6">Sábado</option>
+              <option value="0">Domingo</option><option value="1">Lunes</option><option value="2">Martes</option>
+              <option value="3">Miércoles</option><option value="4">Jueves</option><option value="5">Viernes</option><option value="6">Sábado</option>
             </select>
           </div>
-          <div style="flex:1">
-            <div class="form-lbl">Hora</div>
+          <div style="flex:1"><div class="form-lbl">Hora</div>
             <input class="form-input" id="s-hora" type="time" value="20:00"/>
           </div>
         </div>
+        <div class="form-lbl">Estado inicial de cada turno</div>
+        <select class="form-select" id="s-estado">
+          <option value="lleno">Completo (lleno)</option>
+          <option value="disponible">Con lugares disponibles</option>
+        </select>
         <div class="form-lbl">Generar semanas adelante</div>
         <select class="form-select" id="s-semanas">
-          <option value="4">4 semanas</option>
-          <option value="8" selected>8 semanas</option>
+          <option value="4" selected>4 semanas</option>
+          <option value="8">8 semanas</option>
           <option value="12">12 semanas</option>
         </select>
         <button class="btn-primary" onclick="addSerie()">+ Crear serie recurrente</button>
       </div>
-
       <div class="adivider"></div>
-
-      <!-- Existing series list -->
       <div class="form-section">
-        <div style="font-size:12px;font-weight:700;margin-bottom:8px;color:var(--muted2);text-transform:uppercase;letter-spacing:0.5px">Series activas</div>
+        <div class="section-title">Series activas</div>
         <div id="series-list"><div style="font-size:12px;color:var(--muted)">Cargando...</div></div>
       </div>
-
       <div class="adivider"></div>
       <button class="btn-secondary" onclick="closeAdmin()">Cerrar panel</button>
     </div>
   </div>
 </div>
 
-<!-- ══════════════════════════ MODALS ════════════════════════════════ -->
+<!-- MODAL: password -->
 <div class="modal-bg" id="modal-pass" style="display:none">
   <div class="modal">
     <h2>🔐 Acceso admin</h2>
-    <p>Ingresá la contraseña para gestionar turnos y series.</p>
+    <p>Ingresá la contraseña para gestionar turnos.</p>
     <input type="password" id="m-pass" placeholder="Contraseña..." onkeydown="if(event.key==='Enter')checkPass()"/>
     <div class="modal-row">
       <button class="modal-cancel" onclick="closeModal('modal-pass')">Cancelar</button>
@@ -565,210 +309,207 @@ body { font-family: 'Syne', sans-serif; background: var(--bg); color: var(--text
   </div>
 </div>
 
+<!-- MODAL: agregar jugador -->
+<div class="modal-bg" id="modal-add" style="display:none">
+  <div class="modal">
+    <h2>➕ Agregar jugador</h2>
+    <p id="modal-add-info"></p>
+    <span class="modal-lbl">Nombre del jugador</span>
+    <input type="text" id="modal-add-nombre" placeholder="Nombre..." onkeydown="if(event.key==='Enter')confirmarAdd()"/>
+    <span class="modal-lbl">Origen</span>
+    <select id="modal-add-origen"><option value="whatsapp">WhatsApp</option><option value="web">Web</option></select>
+    <div class="modal-row">
+      <button class="modal-cancel" onclick="closeModal('modal-add')">Cancelar</button>
+      <button class="modal-ok" onclick="confirmarAdd()">Agregar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: bajar jugador -->
+<div class="modal-bg" id="modal-bajar" style="display:none">
+  <div class="modal">
+    <h2>🔻 Bajar jugador</h2>
+    <p id="modal-bajar-info"></p>
+    <span class="modal-lbl">Seleccioná el jugador</span>
+    <select id="modal-bajar-sel"></select>
+    <div class="modal-row">
+      <button class="modal-cancel" onclick="closeModal('modal-bajar')">Cancelar</button>
+      <button class="modal-ok danger" onclick="confirmarBajar()">Bajar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: eliminar turno -->
+<div class="modal-bg" id="modal-del" style="display:none">
+  <div class="modal">
+    <h2>🗑️ Eliminar turno</h2>
+    <p id="modal-del-info"></p>
+    <div class="modal-row">
+      <button class="modal-cancel" onclick="closeModal('modal-del')">Cancelar</button>
+      <button class="modal-ok danger" onclick="confirmarEliminar()">Eliminar definitivamente</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: cliente solicita turno -->
+<div class="modal-bg" id="modal-ct" style="display:none">
+  <div class="modal">
+    <h2>📋 Solicitar turno nuevo</h2>
+    <p>El turno se crea completo y aparece en el calendario. Luego podés liberar lugares desde adentro del turno.</p>
+    <span class="modal-lbl">Tu nombre (dueño del turno)</span>
+    <input type="text" id="ct-nombre" placeholder="Tu nombre o nombre del grupo..."/>
+    <div class="mrow">
+      <div><span class="modal-lbl">Cancha</span>
+        <select id="ct-cancha">
+          <option value="c1">Cancha 1 — F6</option>
+          <option value="c2">Cancha 2 — F6</option>
+          <option value="c3">Cancha 3 — F5</option>
+        </select>
+      </div>
+      <div><span class="modal-lbl">Hora</span><input type="time" id="ct-hora" value="20:00"/></div>
+    </div>
+    <span class="modal-lbl">Fecha</span>
+    <input type="date" id="ct-fecha"/>
+    <div class="modal-row">
+      <button class="modal-cancel" onclick="closeModal('modal-ct')">Cancelar</button>
+      <button class="modal-ok" onclick="confirmarClienteTurno()">Crear turno</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast-wrap" id="toasts"></div>
 
-<!-- ══════════════════════════ SCRIPT ════════════════════════════════ -->
 <script>
-// ══════════════════════════════════════════════════════════════════════
-// CONFIG — Reemplazá con tus datos de Supabase
-// ══════════════════════════════════════════════════════════════════════
 const SUPABASE_URL  = 'https://ydcyeffpmwgbwisytgpi.supabase.co';
 const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlkY3llZmZwbXdnYndpc3l0Z3BpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1MDUwODksImV4cCI6MjA5MDA4MTA4OX0.CXSsuKiNwgywoS2xZJCFhV7SUHiIMypqFFZys5gd59U';
 const WA_NUMBER     = '5493532400611';
 const ADMIN_PASS    = 'Beltran';
 
-// ══════════════════════════════════════════════════════════════════════
-// INIT
-// ══════════════════════════════════════════════════════════════════════
 const { createClient } = supabase;
 const sb = createClient(SUPABASE_URL, SUPABASE_ANON);
 
-let state = {
-  turnos: [],     // array de turnos con jugadores embebidos
-  canchas: [],
-  series: [],
-  tab: 'todas',
-  filter: 'todos',
-  isAdmin: false,
-};
+let state = { turnos:[], canchas:[], series:[], tab:'todas', filter:'todos', isAdmin:false };
+let pendingAdd=null, pendingBajar=null, pendingDel=null;
 
-// ══════════════════════════════════════════════════════════════════════
-// SUPABASE — LOAD & REALTIME
-// ══════════════════════════════════════════════════════════════════════
 async function loadAll() {
-  const [{ data: canchas }, { data: turnos }, { data: series }] = await Promise.all([
+  const [{ data:canchas },{ data:turnos },{ data:series }] = await Promise.all([
     sb.from('canchas').select('*').order('id'),
-    sb.from('turnos_completos').select('*').gte('fecha', today()).order('fecha').order('hora'),
-    sb.from('series_recurrentes').select('*').eq('activa', true).order('created_at'),
+    sb.from('turnos_completos').select('*').gte('fecha',today()).order('fecha').order('hora'),
+    sb.from('series_recurrentes').select('*').eq('activa',true).order('created_at'),
   ]);
-  state.canchas = canchas || [];
-  state.turnos  = (turnos || []).map(normTurno);
-  state.series  = series || [];
-  populateDateFilter();
-  render();
-  updateBadges();
-  renderSeriesList();
+  state.canchas=canchas||[];
+  state.turnos=(turnos||[]).map(normTurno);
+  state.series=series||[];
+  populateDateFilter(); render(); updateBadges(); renderSeriesList();
 }
 
 function normTurno(t) {
-  // jugadores comes as JSON array from the view
-  if (typeof t.jugadores === 'string') {
-    try { t.jugadores = JSON.parse(t.jugadores); } catch { t.jugadores = []; }
-  }
-  if (!Array.isArray(t.jugadores)) t.jugadores = [];
+  if(typeof t.jugadores==='string'){try{t.jugadores=JSON.parse(t.jugadores);}catch{t.jugadores=[];}}
+  if(!Array.isArray(t.jugadores)) t.jugadores=[];
   return t;
 }
 
 function subscribeRealtime() {
-  sb.channel('public-changes')
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'turnos' }, async () => {
-      await refreshTurnos();
-    })
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'reservas' }, async () => {
-      await refreshTurnos();
-    })
-    .subscribe(status => {
-      const badge = document.getElementById('rt-badge');
-      const txt   = document.getElementById('rt-txt');
-      if (status === 'SUBSCRIBED') {
-        badge.className = 'rt-badge ok'; txt.textContent = 'En vivo';
-      } else if (status === 'CLOSED' || status === 'CHANNEL_ERROR') {
-        badge.className = 'rt-badge err'; txt.textContent = 'Sin conexión';
-      } else {
-        badge.className = 'rt-badge wait'; txt.textContent = 'Conectando';
-      }
+  sb.channel('pub').on('postgres_changes',{event:'*',schema:'public',table:'turnos'},refreshTurnos)
+    .on('postgres_changes',{event:'*',schema:'public',table:'reservas'},refreshTurnos)
+    .subscribe(s=>{
+      const b=document.getElementById('rt-badge'),t=document.getElementById('rt-txt');
+      if(s==='SUBSCRIBED'){b.className='rt-badge ok';t.textContent='En vivo';}
+      else if(s==='CLOSED'||s==='CHANNEL_ERROR'){b.className='rt-badge err';t.textContent='Sin conexión';}
+      else{b.className='rt-badge wait';t.textContent='Conectando';}
     });
 }
 
 async function refreshTurnos() {
-  const { data } = await sb.from('turnos_completos')
-    .select('*').gte('fecha', today()).order('fecha').order('hora');
-  state.turnos = (data || []).map(normTurno);
-  render();
-  updateBadges();
+  const {data}=await sb.from('turnos_completos').select('*').gte('fecha',today()).order('fecha').order('hora');
+  state.turnos=(data||[]).map(normTurno);
+  render(); updateBadges();
 }
 
-// ══════════════════════════════════════════════════════════════════════
-// RENDER
-// ══════════════════════════════════════════════════════════════════════
 function render() {
-  const player = pname().toLowerCase();
-  const selDate = document.getElementById('fdate').value;
-  const content = document.getElementById('content');
-
-  let list = state.turnos.filter(t => {
-    if (state.tab === 'c1' || state.tab === 'c2' || state.tab === 'c3') {
-      if (t.cancha_id !== state.tab) return false;
-    }
-    if (state.tab === 'mis') {
-      return player && t.jugadores.some(j => j.nombre.toLowerCase() === player);
-    }
-    if (state.filter === 'disponibles' && t.estado !== 'disponible') return false;
-    if (state.filter === 'llenos'      && t.estado !== 'lleno')       return false;
-    if (state.filter === 'fijo'        && t.tipo !== 'fijo')          return false;
-    if (state.filter === 'ocasional'   && t.tipo !== 'ocasional')     return false;
-    if (selDate && t.fecha !== selDate) return false;
+  const player=pname().toLowerCase(), selDate=document.getElementById('fdate').value;
+  const content=document.getElementById('content');
+  let list=state.turnos.filter(t=>{
+    if(['c1','c2','c3'].includes(state.tab)&&t.cancha_id!==state.tab) return false;
+    if(state.tab==='mis') return player&&t.jugadores.some(j=>j.nombre.toLowerCase()===player);
+    if(state.filter==='disponibles'&&t.estado!=='disponible') return false;
+    if(state.filter==='llenos'&&t.estado!=='lleno') return false;
+    if(state.filter==='fijo'&&t.tipo!=='fijo') return false;
+    if(state.filter==='ocasional'&&t.tipo!=='ocasional') return false;
+    if(selDate&&t.fecha!==selDate) return false;
     return true;
   });
-
-  if (list.length === 0) {
-    const msg = state.tab === 'mis' && !player
-      ? 'Escribí tu nombre para ver tus reservas'
-      : 'No hay turnos para mostrar';
-    content.innerHTML = `<div class="empty"><div class="empty-icon">📋</div><p>${msg}</p></div>`;
+  if(!list.length){
+    const msg=state.tab==='mis'&&!player?'Escribí tu nombre para ver tus reservas':'No hay turnos para mostrar';
+    content.innerHTML=`<div class="empty"><div class="empty-icon">📋</div><p>${msg}</p></div>`;
     return;
   }
-
-  // Group by date
-  const byDate = {};
-  list.forEach(t => { (byDate[t.fecha] = byDate[t.fecha] || []).push(t); });
-
-  content.innerHTML = Object.entries(byDate)
-    .sort(([a],[b]) => a.localeCompare(b))
-    .map(([fecha, ts]) => `
-      <div class="dg">
-        <div class="dg-head">
-          <span class="dg-lbl">${fmtDate(fecha)}</span>
-          <div class="dg-line"></div>
-        </div>
-        <div class="tgrid">${ts.sort((a,b)=>a.hora.localeCompare(b.hora)||(a.cancha_id.localeCompare(b.cancha_id))).map(renderCard).join('')}</div>
-      </div>`)
+  const byDate={};
+  list.forEach(t=>{(byDate[t.fecha]=byDate[t.fecha]||[]).push(t);});
+  content.innerHTML=Object.entries(byDate).sort(([a],[b])=>a.localeCompare(b))
+    .map(([fecha,ts])=>`<div class="dg"><div class="dg-head"><span class="dg-lbl">${fmtDate(fecha)}</span><div class="dg-line"></div></div><div class="tgrid">${ts.sort((a,b)=>a.hora.localeCompare(b.hora)||(a.cancha_id.localeCompare(b.cancha_id))).map(renderCard).join('')}</div></div>`)
     .join('');
 }
 
 function renderCard(t) {
-  const player = pname().toLowerCase();
-  const max    = t.max_jugadores;
-  const count  = t.jugadores.length;
-  const libre  = max - count;
-  const lleno  = t.estado === 'lleno';
-  const cancel = t.estado === 'cancelado';
-  const yaAnot = player && t.jugadores.some(j => j.nombre.toLowerCase() === player);
-  const urgente = !lleno && !cancel && libre <= 2 && libre > 0;
+  const player=pname().toLowerCase();
+  const max=t.max_jugadores, count=t.jugadores.length, libre=max-count;
+  const lleno=t.estado==='lleno', cancel=t.estado==='cancelado';
+  const yaAnot=player&&t.jugadores.some(j=>j.nombre.toLowerCase()===player);
+  const urgente=!lleno&&!cancel&&libre<=2&&libre>0;
+  const colors={c1:'#22c55e',c2:'#3b82f6',c3:'#f59e0b'};
+  const color=colors[t.cancha_id]||'#6b7280';
 
-  // slots
-  const slots = Array.from({length: max}, (_, i) => {
-    const j = t.jugadores[i];
-    if (!j) return `<div class="slot libre"></div>`;
-    const yo = player && j.nombre.toLowerCase() === player;
-    return `<div class="slot ${yo ? 'yo' : 'ocup'}" title="${esc(j.nombre)}"></div>`;
+  const slots=Array.from({length:max},(_,i)=>{
+    const j=t.jugadores[i];
+    if(!j) return `<div class="slot libre"></div>`;
+    const yo=player&&j.nombre.toLowerCase()===player;
+    return `<div class="slot ${yo?'yo':'ocup'}" title="${esc(j.nombre)}"></div>`;
   }).join('');
 
-  // pills
-  const pills = t.jugadores.map(j => {
-    const yo = player && j.nombre.toLowerCase() === player;
-    const wa = j.origen === 'whatsapp';
-    return `<div class="pill ${yo ? 'yo' : ''}">
-      ${yo ? '⭐ ' : ''}${esc(j.nombre)}
-      ${wa ? '<span class="pill-wa">WA</span>' : ''}
-      ${state.isAdmin ? `<button class="pill-x" onclick="quitarJugador('${t.id}','${esc(j.nombre)}')">×</button>` : ''}
+  const pills=t.jugadores.map(j=>{
+    const yo=player&&j.nombre.toLowerCase()===player;
+    const wa=j.origen==='whatsapp';
+    const safeName=esc(j.nombre).replace(/'/g,'&#39;');
+    return `<div class="pill ${yo?'yo':''}">
+      ${yo?'⭐ ':''}${esc(j.nombre)}
+      ${wa?'<span class="pill-wa">WA</span>':''}
+      ${state.isAdmin?`<button class="pill-x" onclick="quitarJugador('${t.id}','${safeName}')">×</button>`:''}
     </div>`;
-  }).join('') || `<span style="font-size:10px;color:var(--muted);font-family:'DM Mono',monospace">Sin reservas</span>`;
+  }).join('')||`<span style="font-size:10px;color:var(--muted);font-family:'DM Mono',monospace">Sin reservas</span>`;
 
-  // action buttons
-  let actions = '';
-  if (!cancel) {
-    if (yaAnot) {
-      actions = `<button class="btn-baj" onclick="bajar('${t.id}')">Bajarme</button>
-                 <button class="btn-res" disabled>Ya anotado ✓</button>`;
-    } else if (!lleno) {
-      actions = `<button class="btn-res" onclick="reservar('${t.id}')">Reservar lugar</button>`;
-    } else {
-      actions = `<button class="btn-res" disabled>Turno lleno</button>`;
-    }
-  } else {
-    actions = `<button class="btn-res" disabled>Turno cancelado</button>`;
+  let actions='';
+  if(!cancel){
+    if(yaAnot) actions=`<button class="btn-baj" onclick="bajar('${t.id}')">Bajarme</button><button class="btn-res" disabled>Ya anotado ✓</button>`;
+    else if(!lleno) actions=`<button class="btn-res" onclick="reservar('${t.id}')">Reservar lugar</button>`;
+    else actions=`<button class="btn-res" disabled>Turno lleno</button>`;
+  } else actions=`<button class="btn-res" disabled>Turno cancelado</button>`;
+
+  const waMsg=!lleno&&!cancel
+    ?encodeURIComponent(`Hola! Quiero anotarme al turno del ${fmtDate(t.fecha)} a las ${t.hora.slice(0,5)} en ${t.cancha_nombre}. Mi nombre: `)
+    :encodeURIComponent(`Hola! Me interesa el turno del ${fmtDate(t.fecha)} a las ${t.hora.slice(0,5)} en ${t.cancha_nombre}. `);
+  const waBtn=`<a class="btn-wa" href="https://wa.me/${WA_NUMBER}?text=${waMsg}" target="_blank" rel="noopener">${!lleno&&!cancel?'📲 Pedir lugar por WhatsApp':'📲 Consultar por WhatsApp'}</a>`;
+
+  let adminStrip='';
+  if(state.isAdmin){
+    const hasjug=t.jugadores.length>0;
+    adminStrip=`<div class="tc-admin">
+      <button class="adm-btn adm-add" onclick="openAdd('${t.id}')">+ Jugador</button>
+      ${hasjug?`<button class="adm-btn adm-bajar" onclick="openBajar('${t.id}')">Bajar jugador</button>`:''}
+      ${!cancel?`<button class="adm-btn adm-cancel" onclick="cancelTurno('${t.id}')">Cancelar</button>`:''}
+      ${cancel?`<button class="adm-btn adm-react" onclick="reactTurno('${t.id}')">Reactivar</button>`:''}
+      <button class="adm-btn adm-del" onclick="openDel('${t.id}')">🗑 Eliminar</button>
+    </div>`;
   }
 
-  // WhatsApp link
-  const waMsg = !lleno && !cancel
-    ? encodeURIComponent(`Hola! Quiero anotarme al turno del ${fmtDate(t.fecha)} a las ${t.hora.slice(0,5)} en ${t.cancha_nombre}. Soy: [TU NOMBRE]`)
-    : encodeURIComponent(`Hola! Quiero reservar un nuevo turno. Cancha preferida: ${t.cancha_nombre}. Día y hora: `);
-  const waLabel = !lleno && !cancel ? '📲 Pedir lugar por WhatsApp' : '📲 Solicitar turno nuevo por WhatsApp';
-  const waBtn = `<a class="btn-wa" href="https://wa.me/${WA_NUMBER}?text=${waMsg}" target="_blank" rel="noopener">${waLabel}</a>`;
-
-  // admin strip
-  const adminStrip = state.isAdmin ? `<div class="tc-admin">
-    ${!cancel ? `<button class="adm-btn adm-cancel" onclick="cancelTurno('${t.id}')">Cancelar</button>` : ''}
-    ${cancel  ? `<button class="adm-btn adm-react"  onclick="reactTurno('${t.id}')">Reactivar</button>` : ''}
-    <button class="adm-btn adm-clear" onclick="clearTurno('${t.id}')">Limpiar</button>
-  </div>` : '';
-
-  const cardClass = ['tc', t.estado, urgente ? 'urgente' : ''].filter(Boolean).join(' ');
-  const tipoTag   = t.tipo === 'fijo' ? `<span class="tag-fijo">Fijo</span>` : `<span class="tag-ocas">Ocasional</span>`;
-  const hora5     = t.hora.slice(0,5);
-
-  return `
-  <div class="${cardClass}">
-    <div class="tc-bar" style="background:${t.cancha_color}"></div>
-    <div class="tc-head">
-      <div>
-        <div class="tc-nombre">${esc(t.nombre)}</div>
-        <div class="tc-meta">${hora5} · ${t.cancha_nombre} · ${t.cancha_tipo} ${tipoTag}</div>
-      </div>
+  const tipoTag=t.tipo==='fijo'?`<span class="tag-fijo">Fijo</span>`:`<span class="tag-ocas">Ocasional</span>`;
+  return `<div class="${['tc',t.estado,urgente?'urgente':''].filter(Boolean).join(' ')}">
+    <div class="tc-bar" style="background:${color}"></div>
+    <div class="tc-head" style="border-left:3px solid ${color}">
+      <div><div class="tc-nombre">${esc(t.nombre)}</div><div class="tc-meta">${t.hora.slice(0,5)} · ${t.cancha_nombre} · ${t.cancha_tipo} ${tipoTag}</div></div>
       <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
         <div class="tc-estado est-${t.estado}">${estadoLabel(t.estado)}</div>
-        ${libre > 0 && !cancel ? `<div style="font-size:10px;color:var(--muted);font-family:'DM Mono',monospace">${libre} libre${libre!==1?'s':''}</div>` : ''}
+        ${libre>0&&!cancel?`<div style="font-size:10px;color:var(--muted);font-family:'DM Mono',monospace">${libre} libre${libre!==1?'s':''}</div>`:''}
       </div>
     </div>
     <div class="tc-body">
@@ -782,304 +523,213 @@ function renderCard(t) {
   </div>`;
 }
 
-// ══════════════════════════════════════════════════════════════════════
-// ACTIONS — RESERVAS
-// ══════════════════════════════════════════════════════════════════════
+// ACCIONES JUGADOR
 async function reservar(turnoId) {
-  const nombre = pname();
-  if (!nombre) { toast('Ingresá tu nombre primero', 'inf'); document.getElementById('pname').focus(); return; }
-  const t = state.turnos.find(x => x.id === turnoId);
-  if (!t) return;
-  if (t.jugadores.length >= t.max_jugadores) { toast('El turno está lleno', 'err'); return; }
-
-  const { error } = await sb.from('reservas').insert({ turno_id: turnoId, nombre, origen: 'web' });
-  if (error) {
-    if (error.code === '23505') toast('Ya estás anotado en este turno', 'err');
-    else toast('Error al reservar: ' + error.message, 'err');
-    return;
-  }
-
-  // Update estado if full
-  const newCount = t.jugadores.length + 1;
-  if (newCount >= t.max_jugadores) {
-    await sb.from('turnos').update({ estado: 'lleno' }).eq('id', turnoId);
-  }
-  toast('¡Reserva confirmada! ✓', 'ok');
+  const nombre=pname();
+  if(!nombre){toast('Ingresá tu nombre primero','inf');document.getElementById('pname').focus();return;}
+  const t=state.turnos.find(x=>x.id===turnoId);
+  if(!t||t.jugadores.length>=t.max_jugadores){toast('El turno está lleno','err');return;}
+  const {error}=await sb.from('reservas').insert({turno_id:turnoId,nombre,origen:'web'});
+  if(error){toast(error.code==='23505'?'Ya estás anotado':'Error: '+error.message,'err');return;}
+  if(t.jugadores.length+1>=t.max_jugadores) await sb.from('turnos').update({estado:'lleno'}).eq('id',turnoId);
+  toast('¡Reserva confirmada! ✓','ok');
 }
 
 async function bajar(turnoId) {
-  const nombre = pname();
-  if (!nombre) return;
-  const t = state.turnos.find(x => x.id === turnoId);
-  if (!t) return;
-
-  const j = t.jugadores.find(x => x.nombre.toLowerCase() === nombre.toLowerCase());
-  if (!j) { toast('No estás anotado en ese turno', 'err'); return; }
-
-  const { error } = await sb.from('reservas').delete().eq('id', j.id);
-  if (error) { toast('Error: ' + error.message, 'err'); return; }
-
-  // reactivar si estaba lleno
-  if (t.estado === 'lleno') {
-    await sb.from('turnos').update({ estado: 'disponible' }).eq('id', turnoId);
-  }
-  toast('Reserva cancelada', 'ok');
+  const nombre=pname(); if(!nombre) return;
+  const t=state.turnos.find(x=>x.id===turnoId);
+  const j=t?.jugadores.find(x=>x.nombre.toLowerCase()===nombre.toLowerCase());
+  if(!j){toast('No estás anotado en ese turno','err');return;}
+  await sb.from('reservas').delete().eq('id',j.id);
+  if(t.estado==='lleno') await sb.from('turnos').update({estado:'disponible'}).eq('id',turnoId);
+  toast('Te bajaste del turno','ok');
 }
 
-async function quitarJugador(turnoId, nombre) {
-  const t = state.turnos.find(x => x.id === turnoId);
-  if (!t) return;
-  const j = t.jugadores.find(x => x.nombre === nombre);
-  if (!j) return;
-  await sb.from('reservas').delete().eq('id', j.id);
-  if (t.estado === 'lleno') await sb.from('turnos').update({ estado: 'disponible' }).eq('id', turnoId);
-  toast('Jugador removido', 'ok');
+async function quitarJugador(turnoId,nombre) {
+  const t=state.turnos.find(x=>x.id===turnoId);
+  const j=t?.jugadores.find(x=>x.nombre===nombre);
+  if(!j) return;
+  await sb.from('reservas').delete().eq('id',j.id);
+  if(t.estado==='lleno') await sb.from('turnos').update({estado:'disponible'}).eq('id',turnoId);
+  toast('Jugador removido','ok');
 }
 
-// ══════════════════════════════════════════════════════════════════════
-// ACTIONS — ADMIN TURNOS
-// ══════════════════════════════════════════════════════════════════════
-async function cancelTurno(id) {
-  if (!confirm('¿Cancelar este turno?')) return;
-  await sb.from('turnos').update({ estado: 'cancelado' }).eq('id', id);
-  toast('Turno cancelado', 'ok');
+// ADMIN — AGREGAR JUGADOR
+function openAdd(turnoId) {
+  pendingAdd=turnoId;
+  const t=state.turnos.find(x=>x.id===turnoId);
+  document.getElementById('modal-add-info').textContent=`${t?.nombre||''} — ${t?.fecha||''} ${t?.hora?.slice(0,5)||''}`;
+  document.getElementById('modal-add-nombre').value='';
+  document.getElementById('modal-add-origen').value='whatsapp';
+  document.getElementById('modal-add').style.display='flex';
+  setTimeout(()=>document.getElementById('modal-add-nombre').focus(),80);
 }
-async function reactTurno(id) {
-  const t = state.turnos.find(x => x.id === id);
-  const est = t && t.jugadores.length >= t.max_jugadores ? 'lleno' : 'disponible';
-  await sb.from('turnos').update({ estado: est }).eq('id', id);
-  toast('Turno reactivado', 'ok');
-}
-async function clearTurno(id) {
-  if (!confirm('¿Borrar todos los jugadores de este turno?')) return;
-  await sb.from('reservas').delete().eq('turno_id', id);
-  await sb.from('turnos').update({ estado: 'disponible' }).eq('id', id);
-  toast('Turno limpiado', 'ok');
+async function confirmarAdd() {
+  const nombre=document.getElementById('modal-add-nombre').value.trim();
+  const origen=document.getElementById('modal-add-origen').value;
+  if(!nombre){toast('Ingresá el nombre','err');return;}
+  const t=state.turnos.find(x=>x.id===pendingAdd);
+  if(!t) return;
+  const {error}=await sb.from('reservas').insert({turno_id:pendingAdd,nombre,origen});
+  if(error){toast(error.code==='23505'?'Ese nombre ya está anotado':'Error: '+error.message,'err');return;}
+  const newCount=t.jugadores.length+1;
+  if(newCount>=t.max_jugadores) await sb.from('turnos').update({estado:'lleno'}).eq('id',pendingAdd);
+  else if(t.estado==='lleno') await sb.from('turnos').update({estado:'disponible'}).eq('id',pendingAdd);
+  closeModal('modal-add');
+  toast(`${nombre} agregado ✓`,'ok');
 }
 
-// ══════════════════════════════════════════════════════════════════════
-// ADMIN — CREAR TURNO OCASIONAL
-// ══════════════════════════════════════════════════════════════════════
-async function addTurno() {
-  const cancha_id = document.getElementById('a-cancha').value;
-  const hora      = document.getElementById('a-hora').value;
-  const fecha     = document.getElementById('a-fecha').value;
-  const nombre    = document.getElementById('a-nombre').value.trim();
-  if (!fecha || !hora || !nombre) { toast('Completá todos los campos', 'err'); return; }
+// ADMIN — BAJAR JUGADOR
+function openBajar(turnoId) {
+  const t=state.turnos.find(x=>x.id===turnoId);
+  if(!t||!t.jugadores.length){toast('No hay jugadores en este turno','err');return;}
+  pendingBajar=turnoId;
+  document.getElementById('modal-bajar-info').textContent=`${t.nombre} — ${t.fecha} ${t.hora?.slice(0,5)}`;
+  const sel=document.getElementById('modal-bajar-sel');
+  sel.innerHTML=t.jugadores.map(j=>`<option value="${esc(j.id)}">${esc(j.nombre)}${j.origen==='whatsapp'?' (WA)':''}</option>`).join('');
+  document.getElementById('modal-bajar').style.display='flex';
+}
+async function confirmarBajar() {
+  const reservaId=document.getElementById('modal-bajar-sel').value;
+  const t=state.turnos.find(x=>x.id===pendingBajar);
+  await sb.from('reservas').delete().eq('id',reservaId);
+  if(t?.estado==='lleno') await sb.from('turnos').update({estado:'disponible'}).eq('id',pendingBajar);
+  closeModal('modal-bajar');
+  toast('Jugador bajado del turno','ok');
+}
 
-  const cancha = state.canchas.find(c => c.id === cancha_id);
-  const displayNombre = nombre || `${fmtDate(fecha)} ${hora} — ${cancha?.nombre || cancha_id}`;
+// ADMIN — CANCELAR / REACTIVAR
+async function cancelTurno(id){await sb.from('turnos').update({estado:'cancelado'}).eq('id',id);toast('Turno cancelado','ok');}
+async function reactTurno(id){
+  const t=state.turnos.find(x=>x.id===id);
+  const est=t&&t.jugadores.length>=t.max_jugadores?'lleno':'disponible';
+  await sb.from('turnos').update({estado:est}).eq('id',id);toast('Turno reactivado','ok');
+}
 
-  const { error } = await sb.from('turnos').insert({
-    cancha_id, fecha, hora: hora + ':00', nombre: displayNombre, tipo: 'ocasional', estado: 'disponible'
-  });
-  if (error) { toast('Error: ' + error.message, 'err'); return; }
-  document.getElementById('a-nombre').value = '';
-  toast('Turno ocasional creado ✓', 'ok');
+// ADMIN — ELIMINAR TURNO
+function openDel(turnoId) {
+  pendingDel=turnoId;
+  const t=state.turnos.find(x=>x.id===turnoId);
+  document.getElementById('modal-del-info').textContent=
+    `¿Eliminar "${t?.nombre}"? Se borran también todos los jugadores anotados. No se puede deshacer.`;
+  document.getElementById('modal-del').style.display='flex';
+}
+async function confirmarEliminar() {
+  const {error}=await sb.from('turnos').delete().eq('id',pendingDel);
+  if(error){toast('Error al eliminar: '+error.message,'err');return;}
+  closeModal('modal-del');
+  state.turnos=state.turnos.filter(t=>t.id!==pendingDel);
+  render(); updateBadges();
+  toast('Turno eliminado','ok');
+}
+
+// ADMIN — CREAR TURNO
+async function addTurnoAdmin() {
+  const cancha_id=document.getElementById('a-cancha').value;
+  const hora=document.getElementById('a-hora').value;
+  const fecha=document.getElementById('a-fecha').value;
+  const nombre=document.getElementById('a-nombre').value.trim();
+  const estado=document.getElementById('a-estado').value;
+  if(!fecha||!hora||!nombre){toast('Completá todos los campos','err');return;}
+  const {error}=await sb.from('turnos').insert({cancha_id,fecha,hora:hora+':00',nombre,tipo:'ocasional',estado});
+  if(error){toast('Error: '+error.message,'err');return;}
+  document.getElementById('a-nombre').value='';
+  toast('Turno creado ✓','ok'); await refreshTurnos();
+}
+
+// CLIENTE — SOLICITAR TURNO
+function openClienteTurno() {
+  document.getElementById('ct-nombre').value=pname()||'';
+  document.getElementById('ct-fecha').value=today();
+  document.getElementById('modal-ct').style.display='flex';
+  setTimeout(()=>document.getElementById('ct-nombre').focus(),80);
+}
+async function confirmarClienteTurno() {
+  const nombre=document.getElementById('ct-nombre').value.trim();
+  const cancha_id=document.getElementById('ct-cancha').value;
+  const hora=document.getElementById('ct-hora').value;
+  const fecha=document.getElementById('ct-fecha').value;
+  if(!nombre||!hora||!fecha){toast('Completá todos los campos','err');return;}
+  const dias=['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+  const d=new Date(fecha+'T00:00:00');
+  const nombreTurno=`${nombre} — ${dias[d.getDay()]} ${hora}`;
+  const {error}=await sb.from('turnos').insert({cancha_id,fecha,hora:hora+':00',nombre:nombreTurno,tipo:'ocasional',estado:'lleno'});
+  if(error){toast('Error: '+error.message,'err');return;}
+  closeModal('modal-ct');
+  toast('Turno creado y marcado como completo ✓','ok');
   await refreshTurnos();
 }
 
-// ══════════════════════════════════════════════════════════════════════
-// ADMIN — CREAR SERIE RECURRENTE
-// ══════════════════════════════════════════════════════════════════════
+// SERIES
 async function addSerie() {
-  const nombre    = document.getElementById('s-nombre').value.trim();
-  const cancha_id = document.getElementById('s-cancha').value;
-  const dia       = parseInt(document.getElementById('s-dia').value);
-  const hora      = document.getElementById('s-hora').value;
-  const semanas   = parseInt(document.getElementById('s-semanas').value);
-  if (!nombre || !hora) { toast('Completá todos los campos', 'err'); return; }
-
-  const serieId = `${cancha_id}-d${dia}-${hora.replace(':','')}`;
-
-  // Save serie metadata
-  const { error: se } = await sb.from('series_recurrentes').upsert({
-    id: serieId, cancha_id, nombre, dia_semana: dia, hora: hora + ':00', activa: true
-  });
-  if (se) { toast('Error: ' + se.message, 'err'); return; }
-
-  // Generate turns
-  const cancha = state.canchas.find(c => c.id === cancha_id);
-  const dias = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
-  const turnos = [];
-  const base = new Date(); base.setHours(0,0,0,0);
-
-  for (let w = 0; w < semanas; w++) {
-    // find next occurrence of that weekday
-    const d = new Date(base);
-    let diff = dia - d.getDay();
-    if (diff <= 0) diff += 7;
-    if (w > 0) diff += w * 7;
-    else if (diff === 0 && w === 0) diff = 7;
-    d.setDate(base.getDate() + diff + (w === 0 ? 0 : 0));
-
-    // recalculate: for week w, start from next occurrence then add w weeks
-    const anchor = new Date(base);
-    let dDiff = dia - anchor.getDay();
-    if (dDiff <= 0) dDiff += 7;
-    anchor.setDate(anchor.getDate() + dDiff + (w * 7));
-
-    const fechaStr = anchor.toISOString().split('T')[0];
-
-    // Don't duplicate
-    const exists = state.turnos.find(t => t.cancha_id === cancha_id && t.fecha === fechaStr && t.hora.startsWith(hora) && t.tipo === 'fijo');
-    if (exists) continue;
-
-    turnos.push({
-      cancha_id, fecha: fechaStr, hora: hora + ':00',
-      nombre: `${nombre} — ${dias[dia]} ${hora}`,
-      tipo: 'fijo', recurrencia_id: serieId, estado: 'disponible'
-    });
+  const nombre=document.getElementById('s-nombre').value.trim();
+  const cancha_id=document.getElementById('s-cancha').value;
+  const dia=parseInt(document.getElementById('s-dia').value);
+  const hora=document.getElementById('s-hora').value;
+  const semanas=parseInt(document.getElementById('s-semanas').value);
+  const estado=document.getElementById('s-estado').value;
+  if(!nombre||!hora){toast('Completá todos los campos','err');return;}
+  const serieId=`${cancha_id}-d${dia}-${hora.replace(':','')}`;
+  const {error:se}=await sb.from('series_recurrentes').upsert({id:serieId,cancha_id,nombre,dia_semana:dia,hora:hora+':00',activa:true});
+  if(se){toast('Error: '+se.message,'err');return;}
+  const dias=['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+  const base=new Date(); base.setHours(0,0,0,0);
+  const turnos=[];
+  for(let w=0;w<semanas;w++){
+    const anchor=new Date(base);
+    let diff=dia-anchor.getDay(); if(diff<=0) diff+=7;
+    anchor.setDate(anchor.getDate()+diff+(w*7));
+    const fechaStr=anchor.toISOString().split('T')[0];
+    const exists=state.turnos.find(t=>t.cancha_id===cancha_id&&t.fecha===fechaStr&&t.hora.startsWith(hora)&&t.tipo==='fijo');
+    if(exists) continue;
+    turnos.push({cancha_id,fecha:fechaStr,hora:hora+':00',nombre:`${nombre} — ${dias[dia]} ${hora}`,tipo:'fijo',recurrencia_id:serieId,estado});
   }
-
-  if (turnos.length > 0) {
-    const { error: te } = await sb.from('turnos').insert(turnos);
-    if (te) { toast('Error al generar turnos: ' + te.message, 'err'); return; }
-  }
-
-  toast(`Serie creada — ${turnos.length} turnos generados ✓`, 'ok');
+  if(turnos.length>0){const {error:te}=await sb.from('turnos').insert(turnos);if(te){toast('Error: '+te.message,'err');return;}}
+  toast(`Serie creada — ${turnos.length} turnos generados ✓`,'ok');
   await loadAll();
 }
 
 async function deleteSerie(id) {
-  if (!confirm('¿Eliminar la serie? No borra los turnos ya generados.')) return;
-  await sb.from('series_recurrentes').update({ activa: false }).eq('id', id);
-  toast('Serie desactivada', 'ok');
-  const { data } = await sb.from('series_recurrentes').select('*').eq('activa', true);
-  state.series = data || [];
-  renderSeriesList();
+  if(!confirm('¿Desactivar esta serie? Los turnos ya generados no se borran.')) return;
+  await sb.from('series_recurrentes').update({activa:false}).eq('id',id);
+  toast('Serie desactivada','ok');
+  const {data}=await sb.from('series_recurrentes').select('*').eq('activa',true);
+  state.series=data||[]; renderSeriesList();
 }
 
 function renderSeriesList() {
-  const el = document.getElementById('series-list');
-  if (!state.series.length) { el.innerHTML = '<div style="font-size:12px;color:var(--muted)">No hay series activas</div>'; return; }
-  const dias = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
-  el.innerHTML = state.series.map(s => {
-    const c = state.canchas.find(x => x.id === s.cancha_id);
-    return `<div class="series-item">
-      <div>
-        <div class="series-item-name">${esc(s.nombre)}</div>
-        <div class="series-item-meta">${dias[s.dia_semana]} ${s.hora?.slice(0,5)} · ${c?.nombre || s.cancha_id}</div>
-      </div>
-      <button class="series-del" onclick="deleteSerie('${s.id}')" title="Desactivar">×</button>
-    </div>`;
+  const el=document.getElementById('series-list');
+  if(!state.series.length){el.innerHTML='<div style="font-size:12px;color:var(--muted)">No hay series activas</div>';return;}
+  const dias=['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+  el.innerHTML=state.series.map(s=>{
+    const c=state.canchas.find(x=>x.id===s.cancha_id);
+    return `<div class="series-item"><div><div class="series-item-name">${esc(s.nombre)}</div><div class="series-item-meta">${dias[s.dia_semana]} ${s.hora?.slice(0,5)} · ${c?.nombre||s.cancha_id}</div></div><button class="series-del" onclick="deleteSerie('${s.id}')">×</button></div>`;
   }).join('');
 }
 
-// ══════════════════════════════════════════════════════════════════════
-// UI HELPERS
-// ══════════════════════════════════════════════════════════════════════
-function setTab(tab) {
-  state.tab = tab;
-  document.querySelectorAll('.tab').forEach(el => el.classList.remove('on'));
-  document.getElementById('tab-' + tab)?.classList.add('on');
-  const fbar = document.getElementById('fbar');
-  fbar.style.display = tab === 'mis' ? 'none' : 'flex';
-  render();
-}
+// UI
+function setTab(tab){state.tab=tab;document.querySelectorAll('.tab').forEach(el=>el.classList.remove('on'));document.getElementById('tab-'+tab)?.classList.add('on');document.getElementById('fbar').style.display=tab==='mis'?'none':'flex';render();}
+function setF(f){state.filter=f;['todos','disp','llen','fijo','ocas'].forEach(x=>document.getElementById('f-'+x)?.classList.remove('on'));const map={todos:'todos',disponibles:'disp',llenos:'llen',fijo:'fijo',ocasional:'ocas'};document.getElementById('f-'+map[f])?.classList.add('on');render();}
+function populateDateFilter(){const sel=document.getElementById('fdate');const dates=[...new Set(state.turnos.map(t=>t.fecha))].sort();sel.innerHTML='<option value="">Todos</option>'+dates.map(d=>`<option value="${d}">${fmtDate(d)}</option>`).join('');}
+function updateBadges(){const p=pname().toLowerCase();['c1','c2','c3'].forEach(cid=>{const n=state.turnos.filter(t=>t.cancha_id===cid&&t.estado==='disponible').length;const el=document.getElementById('b'+cid);if(el)el.textContent=n;});if(p){const n=state.turnos.filter(t=>t.jugadores.some(j=>j.nombre.toLowerCase()===p)).length;const el=document.getElementById('bmis');if(el)el.textContent=n;}}
+function openAdminFlow(){if(state.isAdmin){closeAdmin();return;}document.getElementById('modal-pass').style.display='flex';setTimeout(()=>document.getElementById('m-pass').focus(),80);}
+function checkPass(){if(document.getElementById('m-pass').value===ADMIN_PASS){state.isAdmin=true;closeModal('modal-pass');document.getElementById('btn-adm').classList.add('on');document.getElementById('btn-adm').textContent='🔓 Admin';document.getElementById('apanel').style.display='flex';document.getElementById('m-pass').value='';toast('Modo admin activo','ok');render();}else{toast('Contraseña incorrecta','err');document.getElementById('m-pass').value='';}}
+function closeAdmin(){state.isAdmin=false;document.getElementById('apanel').style.display='none';document.getElementById('btn-adm').classList.remove('on');document.getElementById('btn-adm').textContent='Admin';render();}
+function closeModal(id){document.getElementById(id).style.display='none';}
+function toast(msg,type='inf'){const c=document.getElementById('toasts');const el=document.createElement('div');el.className='toast '+type;el.textContent=msg;c.appendChild(el);setTimeout(()=>{el.style.opacity='0';el.style.transition='opacity .3s';setTimeout(()=>el.remove(),300);},3000);}
+function pname(){return document.getElementById('pname').value.trim();}
+function today(){return new Date().toISOString().split('T')[0];}
+function esc(s){return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function estadoLabel(e){return e==='disponible'?'Disponible':e==='lleno'?'Lleno':'Cancelado';}
+function fmtDate(str){if(!str)return'';const[y,m,d]=str.split('-');const date=new Date(parseInt(y),parseInt(m)-1,parseInt(d));const dias=['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];const meses=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];const t=today(),tm=new Date(Date.now()+86400000).toISOString().split('T')[0];if(str===t)return`HOY · ${parseInt(d)} ${meses[parseInt(m)-1]}`;if(str===tm)return`MAÑANA · ${parseInt(d)} ${meses[parseInt(m)-1]}`;return`${dias[date.getDay()]} ${parseInt(d)} ${meses[parseInt(m)-1]}`;}
 
-function setF(f) {
-  state.filter = f;
-  ['todos','disp','llen','fijo','ocas'].forEach(x => document.getElementById('f-'+x)?.classList.remove('on'));
-  const map = {todos:'todos',disponibles:'disp',llenos:'llen',fijo:'fijo',ocasional:'ocas'};
-  document.getElementById('f-' + map[f])?.classList.add('on');
-  render();
-}
-
-function populateDateFilter() {
-  const sel = document.getElementById('fdate');
-  const dates = [...new Set(state.turnos.map(t => t.fecha))].sort();
-  sel.innerHTML = '<option value="">Todos</option>' +
-    dates.map(d => `<option value="${d}">${fmtDate(d)}</option>`).join('');
-}
-
-function updateBadges() {
-  const p = pname().toLowerCase();
-  ['c1','c2','c3'].forEach(cid => {
-    const n = state.turnos.filter(t => t.cancha_id === cid && t.estado === 'disponible').length;
-    const el = document.getElementById('b' + cid);
-    if (el) el.textContent = n;
-  });
-  if (p) {
-    const n = state.turnos.filter(t => t.jugadores.some(j => j.nombre.toLowerCase() === p)).length;
-    const el = document.getElementById('bmis');
-    if (el) el.textContent = n;
-  }
-}
-
-// ── Admin flow ────────────────────────────────────────────────────────
-function openAdminFlow() {
-  if (state.isAdmin) { closeAdmin(); return; }
-  document.getElementById('modal-pass').style.display = 'flex';
-  setTimeout(() => document.getElementById('m-pass').focus(), 80);
-}
-function checkPass() {
-  if (document.getElementById('m-pass').value === ADMIN_PASS) {
-    state.isAdmin = true;
-    closeModal('modal-pass');
-    document.getElementById('btn-adm').classList.add('on');
-    document.getElementById('btn-adm').textContent = '🔓 Admin';
-    document.getElementById('apanel').style.display = 'flex';
-    document.getElementById('m-pass').value = '';
-    toast('Modo admin activo', 'ok');
-    render();
-  } else {
-    toast('Contraseña incorrecta', 'err');
-    document.getElementById('m-pass').value = '';
-  }
-}
-function closeAdmin() {
-  state.isAdmin = false;
-  document.getElementById('apanel').style.display = 'none';
-  document.getElementById('btn-adm').classList.remove('on');
-  document.getElementById('btn-adm').textContent = 'Admin';
-  render();
-}
-function closeModal(id) { document.getElementById(id).style.display = 'none'; }
-
-// ── Toast ─────────────────────────────────────────────────────────────
-function toast(msg, type='inf') {
-  const c = document.getElementById('toasts');
-  const el = document.createElement('div');
-  el.className = 'toast ' + type;
-  el.textContent = msg;
-  c.appendChild(el);
-  setTimeout(() => { el.style.opacity='0'; el.style.transition='opacity .3s'; setTimeout(()=>el.remove(),300); }, 3000);
-}
-
-// ── Misc helpers ──────────────────────────────────────────────────────
-function pname() { return document.getElementById('pname').value.trim(); }
-function today() { return new Date().toISOString().split('T')[0]; }
-function esc(s) { return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
-function estadoLabel(e) { return e==='disponible'?'Disponible':e==='lleno'?'Lleno':'Cancelado'; }
-function fmtDate(str) {
-  if (!str) return '';
-  const [y,m,d] = str.split('-');
-  const date = new Date(parseInt(y), parseInt(m)-1, parseInt(d));
-  const dias = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
-  const meses = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
-  const t = today(), tm = new Date(Date.now()+86400000).toISOString().split('T')[0];
-  if (str === t) return `HOY · ${parseInt(d)} ${meses[parseInt(m)-1]}`;
-  if (str === tm) return `MAÑANA · ${parseInt(d)} ${meses[parseInt(m)-1]}`;
-  return `${dias[date.getDay()]} ${parseInt(d)} ${meses[parseInt(m)-1]}`;
-}
-
-// ══════════════════════════════════════════════════════════════════════
 // BOOTSTRAP
-// ══════════════════════════════════════════════════════════════════════
-const savedName = localStorage.getItem('pname') || '';
-if (savedName) document.getElementById('pname').value = savedName;
-
-document.getElementById('pname').addEventListener('input', e => {
-  const n = e.target.value.trim();
-  localStorage.setItem('pname', n);
-  document.getElementById('greeting').textContent = n ? `¡Hola, ${n}! 👋` : '';
-  render(); updateBadges();
-});
-
-// Set default date for admin inputs
-document.getElementById('a-fecha').value = today();
-
+const savedName=localStorage.getItem('pname')||'';
+if(savedName)document.getElementById('pname').value=savedName;
+document.getElementById('pname').addEventListener('input',e=>{const n=e.target.value.trim();localStorage.setItem('pname',n);document.getElementById('greeting').textContent=n?`¡Hola, ${n}! 👋`:'';render();updateBadges();});
+if(savedName)document.getElementById('greeting').textContent=`¡Hola, ${savedName}! 👋`;
+document.getElementById('a-fecha').value=today();
+document.getElementById('ct-fecha').value=today();
 loadAll().then(subscribeRealtime);
 </script>
 </body>
