@@ -252,9 +252,9 @@ body{font-family:'Syne',sans-serif;background:var(--bg);color:var(--text);min-he
         <div class="form-row">
           <div style="flex:1"><div class="form-lbl">Cancha</div>
             <select class="form-select" id="s-cancha">
-              <option value="c1">Cancha 1</option>
-              <option value="c2">Cancha 2</option>
-              <option value="c3">Cancha 3</option>
+              <option value="c1">Cancha 1 — F6</option>
+              <option value="c2">Cancha 2 — F6</option>
+              <option value="c3">Cancha 3 — F5</option>
             </select>
           </div>
           <div style="flex:1"><div class="form-lbl">Día</div>
@@ -468,7 +468,7 @@ function renderCard(t) {
 
   const slots=Array.from({length:max},(_,i)=>{
     const j=t.jugadores[i];
-    if(!j) return `<div class="slot libre"></div>`;
+    if(!j) return `<div class="slot ${t.estado==='lleno'?'ocup':'libre'}"></div>`;
     return `<div class="slot ocup" title="${esc(j.nombre)}"></div>`;
   }).join('');
 
