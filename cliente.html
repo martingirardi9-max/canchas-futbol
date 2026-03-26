@@ -417,7 +417,7 @@ function renderCard(t) {
 
   const slots = Array.from({length:max}, (_,i) => {
     const j = t.jugadores[i];
-    if (!j) return `<div class="slot libre"></div>`;
+    if (!j) return `<div class="slot ${t.estado==='lleno'?'ocup':'libre'}"></div>`;
     const yo = player && j.nombre.toLowerCase() === player;
     return `<div class="slot ${yo?'yo':'ocup'}" title="${esc(j.nombre)}"></div>`;
   }).join('');
