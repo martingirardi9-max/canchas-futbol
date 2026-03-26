@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>⚽ Fútbol 5 — Reservas</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#080c08;--bg2:#0e1510;--card:#13191a;
+  --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.13);
+  --text:#e8ede8;--muted:#5a6e5a;--muted2:#7a917a;
+  --grass:#2d9e52;--grass-l:#3dbb63;--grass-dim:#1e6e38;
+  --danger:#ef4444;--danger-bg:rgba(239,68,68,0.08);
+  --success-bg:rgba(45,158,82,0.1);--warn-bg:rgba(245,158,11,0.08);
+  --r:10px;--r-sm:7px;--r-lg:14px;
+}
+body{font-family:'Syne',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-thumb{background:#2a3a2a;border-radius:2px}
+.header{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 20px;position:sticky;top:0;z-index:100}
+.header-inner{max-width:1100px;margin:0 auto;display:flex;align-items:center;gap:12px;height:56px}
+.logo{display:flex;align-items:center;gap:9px;text-decoration:none;cursor:pointer}
+.logo-ball{width:34px;height:34px;border-radius:8px;background:var(--grass);display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
+.logo-text{font-size:15px;font-weight:800;color:var(--text);letter-spacing:-0.3px;line-height:1}
+.logo-sub{font-size:10px;color:var(--muted2);font-family:'DM Mono',monospace;margin-top:2px}
+.hgap{flex:1}
+.rt-badge{display:flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;font-size:11px;font-family:'DM Mono',monospace;border:1px solid;transition:all .4s}
+.rt-badge.ok{background:rgba(45,158,82,0.1);border-color:rgba(45,158,82,0.25);color:#6ee49a}
+.rt-badge.wait{background:var(--warn-bg);border-color:rgba(245,158,11,0.25);color:#fcd34d}
+.rt-badge.err{background:var(--danger-bg);border-color:rgba(239,68,68,0.25);color:#fca5a5}
+.rt-dot{width:6px;height:6px;border-radius:50%}
+.rt-badge.ok .rt-dot{background:#3dbb63;animation:blink 2s infinite}
+.rt-badge.wait .rt-dot{background:#f59e0b;animation:blink .6s infinite}
+.rt-badge.err .rt-dot{background:#ef4444}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.pbar{background:var(--bg2);border-bottom:1px solid var(--border);padding:10px 20px}
+.pbar-inner{max-width:1100px;margin:0 auto;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.pbar-lbl{font-size:11px;color:var(--muted);font-family:'DM Mono',monospace;white-space:nowrap}
+.pbar-input{background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:var(--r-sm);padding:7px 12px;color:var(--text);font-family:'Syne',sans-serif;font-size:14px;font-weight:600;width:180px;outline:none;transition:border-color .2s}
+.pbar-input:focus{border-color:var(--grass)}
+.pbar-input::placeholder{color:#374741}
+.pbar-greet{font-size:12px;color:var(--muted2);font-family:'DM Mono',monospace}
+.tabs-wrap{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 20px;overflow-x:auto}
+.tabs{max-width:1100px;margin:0 auto;display:flex}
+.tab{padding:13px 18px 11px;font-size:13px;font-weight:600;cursor:pointer;border-bottom:2px solid transparent;color:var(--muted);white-space:nowrap;transition:all .2s;background:none;border-top:none;border-left:none;border-right:none;font-family:'Syne',sans-serif;display:flex;align-items:center;gap:7px}
+.tab:hover{color:var(--text)}
+.tab.on{color:var(--text);border-bottom-color:var(--grass)}
+.tab .badge{background:rgba(45,158,82,0.15);color:var(--grass-l);padding:1px 7px;border-radius:10px;font-size:10px;font-family:'DM Mono',monospace}
+.cdot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.main{max-width:1100px;margin:0 auto;padding:22px 20px 100px}
+.fbar{display:flex;gap:7px;margin-bottom:22px;align-items:center;flex-wrap:wrap}
+.fbar-lbl{font-size:11px;color:var(--muted);font-family:'DM Mono',monospace}
+.fbtn{padding:5px 14px;border-radius:20px;font-size:12px;font-weight:600;font-family:'Syne',sans-serif;cursor:pointer;transition:all .18s;border:1px solid var(--border);background:transparent;color:var(--muted)}
+.fbtn:hover{border-color:var(--border2);color:var(--text)}
+.fbtn.on{background:var(--grass);border-color:var(--grass);color:#fff}
+.fselect{background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:20px;padding:4px 12px;color:var(--text);font-size:11px;font-family:'DM Mono',monospace;cursor:pointer;outline:none;-webkit-appearance:none}
+.dg{margin-bottom:30px}
+.dg-head{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.dg-lbl{font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted2);font-family:'DM Mono',monospace;white-space:nowrap}
+.dg-line{flex:1;height:1px;background:var(--border)}
+.tgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:11px}
+.tc{background:var(--card);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;transition:transform .18s,border-color .18s}
+.tc:hover{transform:translateY(-1px);border-color:var(--border2)}
+.tc.lleno{border-color:rgba(239,68,68,0.2)}
+.tc.cancelado{opacity:.45}
+.tc.urgente{border-color:rgba(245,158,11,0.3)}
+.tc-bar{height:3px}
+.tc-head{padding:13px 15px 10px;display:flex;justify-content:space-between;align-items:flex-start;border-bottom:1px solid var(--border)}
+.tc-nombre{font-size:13px;font-weight:700;color:var(--text);line-height:1.2;margin-bottom:2px}
+.tc-meta{font-size:10px;color:var(--muted);font-family:'DM Mono',monospace;display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:3px}
+.tag-fijo{background:rgba(59,130,246,0.12);border:1px solid rgba(59,130,246,0.25);color:#93c5fd;padding:1px 7px;border-radius:10px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.5px}
+.tag-ocas{background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.22);color:#fcd34d;padding:1px 7px;border-radius:10px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.5px}
+.tc-estado{padding:3px 9px;border-radius:12px;font-size:10px;font-weight:700;font-family:'DM Mono',monospace;flex-shrink:0;margin-left:8px}
+.est-disponible{background:var(--success-bg);color:#6ee49a}
+.est-lleno{background:var(--danger-bg);color:#fca5a5}
+.est-cancelado{background:rgba(80,80,80,0.2);color:var(--muted2)}
+.tc-body{padding:11px 15px 13px}
+.slots{display:flex;gap:3px;margin-bottom:8px;flex-wrap:wrap}
+.slot{width:20px;height:9px;border-radius:3px;transition:background .3s,border-color .3s;border:1px solid rgba(255,255,255,0.07)}
+.slot.libre{background:rgba(255,255,255,0.04)}
+.slot.ocup{background:var(--grass-dim);border-color:rgba(45,158,82,0.4)}
+.slot.yo{background:#d97706;border-color:#f59e0b}
+.slots-info{font-size:10px;color:var(--muted);font-family:'DM Mono',monospace;margin-bottom:9px}
+.slots-info strong{color:var(--grass-l)}
+.pills{display:flex;flex-wrap:wrap;gap:5px;min-height:20px;margin-bottom:11px}
+.pill{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:20px;padding:2px 9px;font-size:11px;color:#c9d5c9;display:flex;align-items:center;gap:4px;font-weight:600}
+.pill.yo{background:rgba(217,119,6,0.1);border-color:rgba(245,158,11,0.3);color:#fcd34d}
+.tc-actions{display:flex;gap:7px;flex-wrap:wrap}
+.btn-res{flex:1;background:var(--grass);border:none;border-radius:var(--r-sm);padding:9px;color:#fff;font-size:13px;font-weight:700;font-family:'Syne',sans-serif;cursor:pointer;transition:background .18s;min-width:120px}
+.btn-res:hover{background:var(--grass-l)}
+.btn-res:disabled{background:rgba(255,255,255,0.06);color:var(--muted);cursor:not-allowed}
+.btn-baj{padding:9px 12px;background:var(--danger-bg);border:1px solid rgba(239,68,68,0.22);border-radius:var(--r-sm);color:#fca5a5;font-size:12px;font-weight:700;font-family:'Syne',sans-serif;cursor:pointer;transition:all .18s;white-space:nowrap}
+.btn-baj:hover{background:rgba(239,68,68,0.16)}
+.btn-cancel-owner{width:100%;margin-top:7px;padding:8px;background:rgba(239,68,68,0.07);border:1px solid rgba(239,68,68,0.2);border-radius:var(--r-sm);color:#fca5a5;font-size:11px;font-weight:700;font-family:'Syne',sans-serif;cursor:pointer;transition:all .18s}
+.btn-cancel-owner:hover{background:rgba(239,68,68,0.14)}
+.btn-wa{display:flex;align-items:center;justify-content:center;gap:6px;padding:9px 12px;border-radius:var(--r-sm);margin-top:7px;background:rgba(37,211,102,0.1);border:1px solid rgba(37,211,102,0.25);color:#5de891;font-size:12px;font-weight:700;font-family:'Syne',sans-serif;text-decoration:none;width:100%;cursor:pointer;text-align:center;transition:all .18s}
+.btn-wa:hover{background:rgba(37,211,102,0.18);border-color:rgba(37,211,102,0.4)}
+.btn-wa.disabled{background:rgba(255,255,255,0.03);border-color:var(--border);color:var(--muted);pointer-events:none;cursor:not-allowed}
+.wa-icon{width:15px;height:15px;flex-shrink:0}
+.libre-badge{display:inline-flex;align-items:center;gap:5px;background:rgba(45,158,82,0.12);border:1px solid rgba(45,158,82,0.28);border-radius:20px;padding:3px 10px;font-size:11px;font-weight:700;font-family:'DM Mono',monospace;color:#6ee49a;margin-bottom:9px}
+.libre-badge.urgente{background:rgba(245,158,11,0.1);border-color:rgba(245,158,11,0.3);color:#fcd34d}
+.libre-badge-dot{width:6px;height:6px;border-radius:50%;background:#3dbb63;animation:blink 2s infinite}
+.libre-badge.urgente .libre-badge-dot{background:#f59e0b}
+.lleno-badge{display:flex;align-items:center;justify-content:center;gap:6px;padding:8px;border-radius:var(--r-sm);margin-top:7px;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);color:#fca5a5;font-size:12px;font-weight:700;font-family:'Syne',sans-serif}
+.empty{text-align:center;padding:56px 20px;color:var(--muted)}
+.empty-icon{font-size:44px;margin-bottom:12px}
+.empty p{font-size:14px;line-height:1.6}
+.loading{text-align:center;padding:60px;color:var(--muted);font-family:'DM Mono',monospace;font-size:13px}
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:500;display:flex;align-items:center;justify-content:center;padding:20px}
+.modal{background:#141e14;border:1px solid var(--border2);border-radius:var(--r-lg);padding:26px;max-width:400px;width:100%}
+.modal h2{font-size:17px;font-weight:800;margin-bottom:6px}
+.modal p{font-size:12px;color:var(--muted2);margin-bottom:14px;line-height:1.6}
+.modal-row{display:flex;gap:8px;margin-top:4px}
+.modal input,.modal select{background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:var(--r-sm);padding:9px 12px;color:var(--text);font-size:14px;font-family:'Syne',sans-serif;width:100%;outline:none;margin-bottom:10px}
+.modal input:focus,.modal select:focus{border-color:var(--grass)}
+.modal-lbl{font-size:11px;color:var(--muted2);font-family:'DM Mono',monospace;margin-bottom:4px;display:block}
+.modal-ok{flex:1;background:var(--grass);border:none;border-radius:var(--r-sm);padding:10px;color:#fff;font-size:13px;font-weight:700;font-family:'Syne',sans-serif;cursor:pointer}
+.modal-ok:hover{background:var(--grass-l)}
+.modal-ok.danger{background:rgba(180,30,30,0.8)}
+.modal-ok.danger:hover{background:var(--danger)}
+.modal-cancel{padding:10px 16px;background:transparent;border:1px solid var(--border);border-radius:var(--r-sm);color:var(--muted2);font-size:13px;font-family:'Syne',sans-serif;cursor:pointer}
+.modal-cancel:hover{color:var(--text)}
+.toast-wrap{position:fixed;bottom:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:7px}
+.toast{padding:10px 16px;border-radius:var(--r);font-size:13px;font-weight:600;border:1px solid;animation:tin .22s ease;max-width:300px;font-family:'Syne',sans-serif}
+.toast.ok{background:rgba(45,158,82,0.15);border-color:rgba(45,158,82,0.3);color:#6ee49a}
+.toast.err{background:var(--danger-bg);border-color:rgba(239,68,68,0.3);color:#fca5a5}
+.toast.inf{background:rgba(59,130,246,0.12);border-color:rgba(59,130,246,0.3);color:#93c5fd}
+@keyframes tin{from{transform:translateX(14px);opacity:0}to{opacity:1;transform:none}}
+.fab{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:200;background:var(--grass);border:none;border-radius:30px;padding:13px 28px;color:#fff;font-size:14px;font-weight:700;font-family:'Syne',sans-serif;cursor:pointer;box-shadow:0 4px 20px rgba(45,158,82,0.35);transition:all .2s;display:flex;align-items:center;gap:8px;white-space:nowrap}
+.fab:hover{background:var(--grass-l);transform:translateX(-50%) translateY(-2px)}
+.mrow{display:flex;gap:8px}
+.mrow>div{flex:1}
+.phone-hint{font-size:10px;color:var(--muted);font-family:'DM Mono',monospace;margin-top:-6px;margin-bottom:8px}
+@media(max-width:600px){
+  .main{padding:16px 14px 100px}
+  .tgrid{grid-template-columns:1fr}
+  .pbar-input{width:100%}
+  .fab{width:calc(100% - 32px)}
+}
+/* WELCOME */
+.welcome-screen{position:fixed;inset:0;background:#080c08;z-index:400;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 20px;font-family:'Syne',sans-serif}
+.welcome-logo-row{display:flex;align-items:center;gap:10px;margin-bottom:4px}
+.welcome-ball{width:40px;height:40px;border-radius:10px;background:var(--grass);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.welcome-logo-txt{font-size:19px;font-weight:800;color:var(--text);letter-spacing:-0.3px}
+.welcome-sub{font-size:10px;color:var(--muted);font-family:'DM Mono',monospace;letter-spacing:1px;margin-bottom:24px;text-align:center}
+.welcome-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r-lg);padding:20px;width:100%;max-width:360px;margin-bottom:16px}
+.welcome-card-title{font-size:12px;font-weight:700;color:var(--muted2);font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px}
+.welcome-field{margin-bottom:10px}
+.welcome-field label{font-size:11px;color:var(--muted);font-family:'DM Mono',monospace;display:block;margin-bottom:4px}
+.welcome-field input{background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:var(--r-sm);padding:9px 12px;color:var(--text);font-family:'Syne',sans-serif;font-size:13px;font-weight:600;width:100%;outline:none;transition:border-color .2s}
+.welcome-field input:focus{border-color:var(--grass)}
+.welcome-field input::placeholder{color:#374741}
+.welcome-q{font-size:11px;color:var(--muted2);font-family:'DM Mono',monospace;margin-bottom:12px;letter-spacing:.3px;text-align:center;text-transform:uppercase}
+.welcome-opts{display:flex;flex-direction:column;gap:9px;width:100%;max-width:360px}
+.welcome-opt{display:flex;align-items:center;gap:14px;background:var(--card);border:1px solid var(--border);border-radius:var(--r-lg);padding:15px 17px;cursor:pointer;transition:all .18s;text-align:left;width:100%}
+.welcome-opt:hover{transform:translateY(-1px)}
+.welcome-opt.wopt-green:hover{border-color:rgba(45,158,82,0.5);background:rgba(45,158,82,0.07)}
+.welcome-opt.wopt-blue:hover{border-color:rgba(59,130,246,0.5);background:rgba(59,130,246,0.06)}
+.welcome-opt-icon{width:40px;height:40px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.wopt-green .welcome-opt-icon{background:rgba(45,158,82,0.13)}
+.wopt-blue .welcome-opt-icon{background:rgba(59,130,246,0.1)}
+.welcome-opt-body{flex:1}
+.welcome-opt-title{font-size:14px;font-weight:700;color:var(--text);margin-bottom:3px}
+.welcome-opt-desc{font-size:11px;color:var(--muted);font-family:'DM Mono',monospace;line-height:1.4}
+.welcome-opt-arrow{font-size:18px;color:#374741;flex-shrink:0;transition:color .18s}
+.welcome-opt:hover .welcome-opt-arrow{color:var(--muted2)}
+.owner-strip{border-top:1px solid var(--border);padding:9px 15px;background:rgba(239,68,68,0.03)}
+</style>
+</head>
+<body>
+
+<!-- WELCOME -->
+<div class="welcome-screen" id="welcome-screen">
+  <div class="welcome-logo-row">
+    <div class="welcome-ball">⚽</div>
+    <div class="welcome-logo-txt">Fútbol 5</div>
+  </div>
+  <div class="welcome-sub">RESERVAS EN VIVO</div>
+
+  <div class="welcome-card">
+    <div class="welcome-card-title">¿Quién sos?</div>
+    <div class="welcome-field">
+      <label>Tu nombre</label>
+      <input type="text" id="w-nombre" placeholder="Nombre o apodo..." maxlength="30" autocomplete="off"/>
+    </div>
+    <div class="welcome-field">
+      <label>Tu teléfono (para gestionar tus turnos)</label>
+      <input type="tel" id="w-telefono" placeholder="Ej: 3512400611" maxlength="20" autocomplete="off"/>
+    </div>
+  </div>
+
+  <div class="welcome-q">¿Qué querés hacer?</div>
+  <div class="welcome-opts">
+    <button class="welcome-opt wopt-green" onclick="welcomeGo('reservar')">
+      <div class="welcome-opt-icon">📋</div>
+      <div class="welcome-opt-body">
+        <div class="welcome-opt-title">Reservar un turno</div>
+        <div class="welcome-opt-desc">Pedí una cancha para tu grupo completo</div>
+      </div>
+      <div class="welcome-opt-arrow">›</div>
+    </button>
+    <button class="welcome-opt wopt-blue" onclick="welcomeGo('sumarme')">
+      <div class="welcome-opt-icon">➕</div>
+      <div class="welcome-opt-body">
+        <div class="welcome-opt-title">Sumarme a un turno</div>
+        <div class="welcome-opt-desc">Anotate en turnos con lugares disponibles</div>
+      </div>
+      <div class="welcome-opt-arrow">›</div>
+    </button>
+  </div>
+</div>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-inner">
+    <div class="logo" onclick="goHome()">
+      <div class="logo-ball">⚽</div>
+      <div><div class="logo-text">Fútbol 5</div><div class="logo-sub">RESERVAS EN VIVO</div></div>
+    </div>
+    <div class="hgap"></div>
+    <div class="rt-badge wait" id="rt-badge"><div class="rt-dot"></div><span id="rt-txt">Conectando</span></div>
+  </div>
+</div>
+
+<div class="pbar">
+  <div class="pbar-inner">
+    <span class="pbar-lbl">Jugando como:</span>
+    <input class="pbar-input" id="pname" type="text" placeholder="Tu nombre..." maxlength="30" readonly style="cursor:default;opacity:.8"/>
+    <span class="pbar-greet" id="greeting"></span>
+  </div>
+</div>
+
+<div class="tabs-wrap">
+  <div class="tabs">
+    <button class="tab on" onclick="setTab('todas')" id="tab-todas">Todas</button>
+    <button class="tab" onclick="setTab('c1')" id="tab-c1"><span class="cdot" style="background:#22c55e"></span>Cancha 1 — F6<span class="badge" id="bc1">0</span></button>
+    <button class="tab" onclick="setTab('c2')" id="tab-c2"><span class="cdot" style="background:#3b82f6"></span>Cancha 2 — F6<span class="badge" id="bc2">0</span></button>
+    <button class="tab" onclick="setTab('c3')" id="tab-c3"><span class="cdot" style="background:#f59e0b"></span>Cancha 3 — F5<span class="badge" id="bc3">0</span></button>
+    <button class="tab" onclick="setTab('mis')" id="tab-mis">Mis reservas<span class="badge" id="bmis">0</span></button>
+  </div>
+</div>
+
+<div class="main">
+  <div class="fbar" id="fbar">
+    <span class="fbar-lbl">Mostrar:</span>
+    <button class="fbtn on" onclick="setF('todos')" id="f-todos">Todos</button>
+    <button class="fbtn" onclick="setF('disponibles')" id="f-disp">Con lugares</button>
+    <button class="fbtn" onclick="setF('llenos')" id="f-llen">Llenos</button>
+    <button class="fbtn" onclick="setF('fijo')" id="f-fijo">Fijos</button>
+    <button class="fbtn" onclick="setF('ocasional')" id="f-ocas">Ocasionales</button>
+    <span class="fbar-lbl" style="margin-left:6px">Fecha:</span>
+    <select class="fselect" id="fdate" onchange="render()"><option value="">Todos</option></select>
+  </div>
+  <div id="content"><div class="loading">Cargando turnos...</div></div>
+</div>
+
+<button class="fab" onclick="openClienteTurno()">+ Solicitar turno nuevo</button>
+
+<!-- MODAL: solicitar turno -->
+<div class="modal-bg" id="modal-ct" style="display:none">
+  <div class="modal">
+    <h2>📋 Solicitar turno nuevo</h2>
+    <p>El turno se crea completo y aparece en el calendario. Luego podés liberar lugares.</p>
+    <span class="modal-lbl">Nombre del turno / dueño</span>
+    <input type="text" id="ct-nombre" placeholder="Tu nombre o nombre del grupo..."/>
+    <span class="modal-lbl">Tu teléfono (para poder cancelar el turno)</span>
+    <input type="tel" id="ct-telefono" placeholder="Ej: 3512400611" maxlength="20"/>
+    <div class="phone-hint">Guardalo — lo vas a necesitar si querés cancelar.</div>
+    <div class="mrow">
+      <div><span class="modal-lbl">Cancha</span>
+        <select id="ct-cancha">
+          <option value="c1">Cancha 1 — F6</option>
+          <option value="c2">Cancha 2 — F6</option>
+          <option value="c3">Cancha 3 — F5</option>
+        </select>
+      </div>
+      <div><span class="modal-lbl">Hora</span><input type="time" id="ct-hora" value="20:00"/></div>
+    </div>
+    <span class="modal-lbl">Fecha</span>
+    <input type="date" id="ct-fecha"/>
+    <span class="modal-lbl">Estado inicial</span>
+    <select id="ct-estado">
+      <option value="lleno">Completo (lleno)</option>
+      <option value="disponible">Con lugares disponibles</option>
+    </select>
+    <div class="modal-row">
+      <button class="modal-cancel" onclick="closeModal('modal-ct')">Cancelar</button>
+      <button class="modal-ok" onclick="confirmarClienteTurno()">Crear turno</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: cancelar turno (owner) -->
+<div class="modal-bg" id="modal-cancel-owner" style="display:none">
+  <div class="modal">
+    <h2>🗑️ Cancelar mi turno</h2>
+    <p id="modal-co-info">¿Estás seguro? Se eliminarán todas las reservas y el turno desaparecerá del calendario.</p>
+    <span class="modal-lbl">Confirmá con tu teléfono</span>
+    <input type="tel" id="modal-co-tel" placeholder="Ingresá tu teléfono para confirmar..." maxlength="20"/>
+    <div class="modal-row">
+      <button class="modal-cancel" onclick="closeModal('modal-cancel-owner')">Volver</button>
+      <button class="modal-ok danger" onclick="confirmarCancelOwner()">Eliminar turno</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-wrap" id="toasts"></div>
+
+<script>
+const SUPABASE_URL  = 'https://ydcyeffpmwgbwisytgpi.supabase.co';
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlkY3llZmZwbXdnYndpc3l0Z3BpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1MDUwODksImV4cCI6MjA5MDA4MTA4OX0.CXSsuKiNwgywoS2xZJCFhV7SUHiIMypqFFZys5gd59U';
+const WA_NUMBER = '5493532400611';
+
+const { createClient } = supabase;
+const sb = createClient(SUPABASE_URL, SUPABASE_ANON);
+
+let state = { turnos:[], canchas:[], tab:'todas', filter:'todos' };
+let pendingCancelOwner = null;
+let currentUser = { nombre:'', telefono:'' };
+
+// ── INIT ─────────────────────────────────────────────────────────────────────
+function goHome() {
+  const ws = document.getElementById('welcome-screen');
+  ws.style.display = 'flex';
+  ws.style.opacity = '1';
+}
+
+function welcomeGo(action) {
+  const nombre = document.getElementById('w-nombre').value.trim();
+  const tel = document.getElementById('w-telefono').value.trim();
+  if (!nombre) { toast('Ingresá tu nombre para continuar', 'inf'); document.getElementById('w-nombre').focus(); return; }
+  currentUser = { nombre, telefono: tel };
+  localStorage.setItem('fb5_nombre', nombre);
+  localStorage.setItem('fb5_tel', tel);
+  document.getElementById('pname').value = nombre;
+  document.getElementById('greeting').textContent = `¡Hola, ${nombre}! 👋`;
+  const ws = document.getElementById('welcome-screen');
+  ws.style.opacity = '0';
+  ws.style.transition = 'opacity .25s';
+  setTimeout(() => { ws.style.display = 'none'; }, 260);
+  if (action === 'reservar') openClienteTurno();
+  else if (action === 'sumarme') { setTab('todas'); setF('disponibles'); }
+}
+
+// ── SUPABASE ──────────────────────────────────────────────────────────────────
+async function loadAll() {
+  const [{ data: canchas }, { data: turnos }] = await Promise.all([
+    sb.from('canchas').select('*').order('id'),
+    sb.from('turnos_completos').select('*').gte('fecha', today()).order('fecha').order('hora'),
+  ]);
+  state.canchas = canchas || [];
+  state.turnos = (turnos || []).map(normTurno);
+  populateDateFilter(); render(); updateBadges();
+}
+
+function normTurno(t) {
+  if (typeof t.jugadores === 'string') { try { t.jugadores = JSON.parse(t.jugadores); } catch { t.jugadores = []; } }
+  if (!Array.isArray(t.jugadores)) t.jugadores = [];
+  return t;
+}
+
+function subscribeRealtime() {
+  sb.channel('pub').on('postgres_changes', { event: '*', schema: 'public', table: 'turnos' }, refreshTurnos)
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'reservas' }, refreshTurnos)
+    .subscribe(s => {
+      const b = document.getElementById('rt-badge'), t = document.getElementById('rt-txt');
+      if (s === 'SUBSCRIBED') { b.className = 'rt-badge ok'; t.textContent = 'En vivo'; }
+      else if (s === 'CLOSED' || s === 'CHANNEL_ERROR') { b.className = 'rt-badge err'; t.textContent = 'Sin conexión'; }
+      else { b.className = 'rt-badge wait'; t.textContent = 'Conectando'; }
+    });
+}
+
+async function refreshTurnos() {
+  const { data } = await sb.from('turnos_completos').select('*').gte('fecha', today()).order('fecha').order('hora');
+  state.turnos = (data || []).map(normTurno);
+  render(); updateBadges();
+}
+
+// ── RENDER ────────────────────────────────────────────────────────────────────
+function render() {
+  const player = currentUser.nombre.toLowerCase();
+  const selDate = document.getElementById('fdate').value;
+  const content = document.getElementById('content');
+  let list = state.turnos.filter(t => {
+    if (['c1','c2','c3'].includes(state.tab) && t.cancha_id !== state.tab) return false;
+    if (state.tab === 'mis') return player && t.jugadores.some(j => j.nombre.toLowerCase() === player);
+    if (state.filter === 'disponibles' && t.estado !== 'disponible') return false;
+    if (state.filter === 'llenos' && t.estado !== 'lleno') return false;
+    if (state.filter === 'fijo' && t.tipo !== 'fijo') return false;
+    if (state.filter === 'ocasional' && t.tipo !== 'ocasional') return false;
+    if (selDate && t.fecha !== selDate) return false;
+    return true;
+  });
+  if (!list.length) {
+    const msg = state.tab === 'mis' && !player ? 'Ingresá tu nombre para ver tus reservas' : 'No hay turnos para mostrar';
+    content.innerHTML = `<div class="empty"><div class="empty-icon">📋</div><p>${msg}</p></div>`;
+    return;
+  }
+  const byDate = {};
+  list.forEach(t => { (byDate[t.fecha] = byDate[t.fecha] || []).push(t); });
+  content.innerHTML = Object.entries(byDate).sort(([a],[b]) => a.localeCompare(b))
+    .map(([fecha, ts]) => `<div class="dg"><div class="dg-head"><span class="dg-lbl">${fmtDate(fecha)}</span><div class="dg-line"></div></div><div class="tgrid">${ts.sort((a,b) => a.hora.localeCompare(b.hora)||(a.cancha_id.localeCompare(b.cancha_id))).map(renderCard).join('')}</div></div>`)
+    .join('');
+}
+
+function renderCard(t) {
+  const player = currentUser.nombre.toLowerCase();
+  const max = t.max_jugadores, count = t.jugadores.length, libre = max - count;
+  const lleno = t.estado === 'lleno', cancel = t.estado === 'cancelado';
+  const yaAnot = player && t.jugadores.some(j => j.nombre.toLowerCase() === player);
+  const urgente = !lleno && !cancel && libre <= 2 && libre > 0;
+  const colors = { c1:'#22c55e', c2:'#3b82f6', c3:'#f59e0b' };
+  const color = colors[t.cancha_id] || '#6b7280';
+
+  const slots = Array.from({length:max}, (_,i) => {
+    const j = t.jugadores[i];
+    if (!j) return `<div class="slot libre"></div>`;
+    const yo = player && j.nombre.toLowerCase() === player;
+    return `<div class="slot ${yo?'yo':'ocup'}" title="${esc(j.nombre)}"></div>`;
+  }).join('');
+
+  const pills = t.jugadores.map(j => {
+    const yo = player && j.nombre.toLowerCase() === player;
+    return `<div class="pill ${yo?'yo':''}">${yo?'⭐ ':''}${esc(j.nombre)}</div>`;
+  }).join('') || `<span style="font-size:10px;color:var(--muted);font-family:'DM Mono',monospace">Sin reservas</span>`;
+
+  // Acciones: solo Reservar (no hay botón WhatsApp duplicado para sumarme)
+  let actions = '';
+  if (!cancel) {
+    if (yaAnot) actions = `<button class="btn-baj" onclick="bajar('${t.id}')">Bajarme</button><button class="btn-res" disabled>Ya anotado ✓</button>`;
+    else if (!lleno) actions = `<button class="btn-res" onclick="reservar('${t.id}')">Reservar lugar</button>`;
+    else actions = `<button class="btn-res" disabled>Turno lleno</button>`;
+  } else {
+    actions = `<button class="btn-res" disabled>Turno cancelado</button>`;
+  }
+
+  // Botón WhatsApp solo si el turno está lleno (para anotarse en lista de espera)
+  const waMsg = encodeURIComponent(`Hola! Quiero jugar el ${fmtDate(t.fecha)} a las ${t.hora.slice(0,5)} en ${t.cancha_nombre}. Mi nombre: `);
+  const waIcon = `<svg style="width:15px;height:15px;flex-shrink:0" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.127.558 4.126 1.532 5.859L.057 23.428a.5.5 0 0 0 .609.61l5.733-1.498A11.952 11.952 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22c-1.885 0-3.651-.518-5.162-1.418l-.371-.22-3.849 1.006 1.028-3.735-.242-.386A9.96 9.96 0 0 1 2 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z"/></svg>`;
+  const waBtn = lleno && !cancel
+    ? `<a class="btn-wa" href="https://wa.me/${WA_NUMBER}?text=${waMsg}" target="_blank" rel="noopener">${waIcon} Quiero jugar (lista de espera)</a>`
+    : '';
+
+  const libresLabel = !lleno && !cancel && libre > 0
+    ? `<div class="libre-badge${urgente?' urgente':''}"><div class="libre-badge-dot"></div>${libre} lugar${libre!==1?'es':''} libre${libre!==1?'s':''}</div>` : '';
+
+  // Botón cancelar solo si soy el dueño (turno ocasional con telefono guardado)
+  const esOwner = t.tipo === 'ocasional' && t.telefono_owner && currentUser.telefono && t.telefono_owner === currentUser.telefono;
+  const ownerStrip = esOwner && !cancel
+    ? `<div class="owner-strip"><button class="btn-cancel-owner" onclick="openCancelOwner('${t.id}')">🗑 Cancelar mi turno</button></div>` : '';
+
+  const tipoTag = t.tipo === 'fijo' ? `<span class="tag-fijo">Fijo</span>` : `<span class="tag-ocas">Ocasional</span>`;
+  return `<div class="${['tc',t.estado,urgente?'urgente':''].filter(Boolean).join(' ')}">
+    <div class="tc-bar" style="background:${color}"></div>
+    <div class="tc-head" style="border-left:3px solid ${color}">
+      <div><div class="tc-nombre">${esc(t.nombre)}</div><div class="tc-meta">${t.hora.slice(0,5)} · ${t.cancha_nombre} · ${t.cancha_tipo} ${tipoTag}</div></div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
+        <div class="tc-estado est-${t.estado}">${estadoLabel(t.estado)}</div>
+        ${libre>0&&!cancel?`<div style="font-size:10px;color:var(--muted);font-family:'DM Mono',monospace">${libre} libre${libre!==1?'s':''}</div>`:''}
+      </div>
+    </div>
+    <div class="tc-body">
+      <div class="slots">${slots}</div>
+      <div class="slots-info"><strong>${count}/${max}</strong> jugadores</div>
+      <div class="pills">${pills}</div>
+      ${libresLabel}
+      <div class="tc-actions">${actions}</div>
+      ${waBtn}
+    </div>
+    ${ownerStrip}
+  </div>`;
+}
+
+// ── ACCIONES JUGADOR ──────────────────────────────────────────────────────────
+async function reservar(turnoId) {
+  const nombre = currentUser.nombre;
+  if (!nombre) { toast('Ingresá tu nombre primero', 'inf'); return; }
+  const t = state.turnos.find(x => x.id === turnoId);
+  if (!t || t.jugadores.length >= t.max_jugadores) { toast('El turno está lleno', 'err'); return; }
+  const { error } = await sb.from('reservas').insert({ turno_id: turnoId, nombre, origen: 'web' });
+  if (error) { toast(error.code === '23505' ? 'Ya estás anotado' : 'Error: ' + error.message, 'err'); return; }
+  if (t.jugadores.length + 1 >= t.max_jugadores) await sb.from('turnos').update({ estado: 'lleno' }).eq('id', turnoId);
+  toast('¡Reserva confirmada! ✓', 'ok');
+}
+
+async function bajar(turnoId) {
+  const nombre = currentUser.nombre; if (!nombre) return;
+  const t = state.turnos.find(x => x.id === turnoId);
+  const j = t?.jugadores.find(x => x.nombre.toLowerCase() === nombre.toLowerCase());
+  if (!j) { toast('No estás anotado en ese turno', 'err'); return; }
+  await sb.from('reservas').delete().eq('id', j.id);
+  if (t.estado === 'lleno') await sb.from('turnos').update({ estado: 'disponible' }).eq('id', turnoId);
+  toast('Te bajaste del turno', 'ok');
+}
+
+// ── CANCELAR TURNO (OWNER) ────────────────────────────────────────────────────
+function openCancelOwner(turnoId) {
+  pendingCancelOwner = turnoId;
+  const t = state.turnos.find(x => x.id === turnoId);
+  document.getElementById('modal-co-info').textContent = `¿Eliminar "${t?.nombre}"? Se borran todas las reservas y el turno desaparece del calendario.`;
+  document.getElementById('modal-co-tel').value = '';
+  document.getElementById('modal-cancel-owner').style.display = 'flex';
+  setTimeout(() => document.getElementById('modal-co-tel').focus(), 80);
+}
+
+async function confirmarCancelOwner() {
+  const telInput = document.getElementById('modal-co-tel').value.trim();
+  const t = state.turnos.find(x => x.id === pendingCancelOwner);
+  if (!t) return;
+  // Normalize: remove spaces, dashes, +
+  const normInput = telInput.replace(/[\s\-\+]/g,'');
+  const normOwner = (t.telefono_owner||'').replace(/[\s\-\+]/g,'');
+  if (!normInput || normInput !== normOwner) {
+    toast('Teléfono incorrecto. No se pudo verificar la identidad.', 'err');
+    return;
+  }
+  // Delete reservas first, then turno
+  await sb.from('reservas').delete().eq('turno_id', pendingCancelOwner);
+  const { error } = await sb.from('turnos').delete().eq('id', pendingCancelOwner);
+  if (error) { toast('Error al eliminar: ' + error.message, 'err'); return; }
+  closeModal('modal-cancel-owner');
+  state.turnos = state.turnos.filter(x => x.id !== pendingCancelOwner);
+  render(); updateBadges();
+  toast('Tu turno fue cancelado y eliminado ✓', 'ok');
+}
+
+// ── SOLICITAR TURNO ───────────────────────────────────────────────────────────
+function openClienteTurno() {
+  document.getElementById('ct-nombre').value = currentUser.nombre || '';
+  document.getElementById('ct-telefono').value = currentUser.telefono || '';
+  document.getElementById('ct-fecha').value = today();
+  document.getElementById('modal-ct').style.display = 'flex';
+  setTimeout(() => document.getElementById('ct-nombre').focus(), 80);
+}
+
+async function confirmarClienteTurno() {
+  const nombre = document.getElementById('ct-nombre').value.trim();
+  const telefono = document.getElementById('ct-telefono').value.trim();
+  const cancha_id = document.getElementById('ct-cancha').value;
+  const hora = document.getElementById('ct-hora').value;
+  const fecha = document.getElementById('ct-fecha').value;
+  const estado = document.getElementById('ct-estado').value;
+  if (!nombre || !hora || !fecha) { toast('Completá todos los campos', 'err'); return; }
+  if (!telefono) { toast('Ingresá tu teléfono para poder cancelar el turno después', 'inf'); document.getElementById('ct-telefono').focus(); return; }
+
+  // Check for conflict: same cancha + fecha + hora
+  const horaStr = hora + ':00';
+  const conflicto = state.turnos.find(t => t.cancha_id === cancha_id && t.fecha === fecha && t.hora.startsWith(hora) && t.estado !== 'cancelado');
+  if (conflicto) {
+    toast(`Ya hay un turno en ${conflicto.cancha_nombre} a las ${hora} ese día. Elegí otro horario o cancha.`, 'err');
+    return;
+  }
+
+  const dias = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+  const d = new Date(fecha + 'T00:00:00');
+  const nombreTurno = `${nombre} — ${dias[d.getDay()]} ${hora}`;
+  const { error } = await sb.from('turnos').insert({ cancha_id, fecha, hora: horaStr, nombre: nombreTurno, tipo: 'ocasional', estado, telefono_owner: telefono });
+  if (error) { toast('Error: ' + error.message, 'err'); return; }
+  closeModal('modal-ct');
+  toast('Turno creado ✓ Guardá tu teléfono para cancelarlo si necesitás.', 'ok');
+  await refreshTurnos();
+}
+
+// ── UI ────────────────────────────────────────────────────────────────────────
+function setTab(tab) { state.tab = tab; document.querySelectorAll('.tab').forEach(el => el.classList.remove('on')); document.getElementById('tab-'+tab)?.classList.add('on'); document.getElementById('fbar').style.display = tab === 'mis' ? 'none' : 'flex'; render(); }
+function setF(f) { state.filter = f; ['todos','disp','llen','fijo','ocas'].forEach(x => document.getElementById('f-'+x)?.classList.remove('on')); const map={todos:'todos',disponibles:'disp',llenos:'llen',fijo:'fijo',ocasional:'ocas'}; document.getElementById('f-'+map[f])?.classList.add('on'); render(); }
+function populateDateFilter() { const sel = document.getElementById('fdate'); const dates = [...new Set(state.turnos.map(t => t.fecha))].sort(); sel.innerHTML = '<option value="">Todos</option>' + dates.map(d => `<option value="${d}">${fmtDate(d)}</option>`).join(''); }
+function updateBadges() { const p = currentUser.nombre.toLowerCase(); ['c1','c2','c3'].forEach(cid => { const n = state.turnos.filter(t => t.cancha_id === cid && t.estado === 'disponible').length; const el = document.getElementById('b'+cid); if(el) el.textContent=n; }); if(p){ const n = state.turnos.filter(t => t.jugadores.some(j => j.nombre.toLowerCase()===p)).length; const el=document.getElementById('bmis'); if(el) el.textContent=n; } }
+function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+function toast(msg, type='inf') { const c=document.getElementById('toasts'); const el=document.createElement('div'); el.className='toast '+type; el.textContent=msg; c.appendChild(el); setTimeout(()=>{ el.style.opacity='0'; el.style.transition='opacity .3s'; setTimeout(()=>el.remove(),300); },3500); }
+function today() { return new Date().toISOString().split('T')[0]; }
+function esc(s) { return String(s||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function estadoLabel(e) { return e==='disponible'?'Disponible':e==='lleno'?'Lleno':'Cancelado'; }
+function fmtDate(str) { if(!str) return ''; const[y,m,d]=str.split('-'); const date=new Date(parseInt(y),parseInt(m)-1,parseInt(d)); const dias=['Dom','Lun','Mar','Mié','Jue','Vie','Sáb']; const meses=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic']; const t=today(),tm=new Date(Date.now()+86400000).toISOString().split('T')[0]; if(str===t) return `HOY · ${parseInt(d)} ${meses[parseInt(m)-1]}`; if(str===tm) return `MAÑANA · ${parseInt(d)} ${meses[parseInt(m)-1]}`; return `${dias[date.getDay()]} ${parseInt(d)} ${meses[parseInt(m)-1]}`; }
+
+// ── BOOTSTRAP ─────────────────────────────────────────────────────────────────
+const savedNombre = localStorage.getItem('fb5_nombre') || '';
+const savedTel = localStorage.getItem('fb5_tel') || '';
+if (savedNombre) {
+  document.getElementById('w-nombre').value = savedNombre;
+  document.getElementById('w-telefono').value = savedTel;
+}
+document.getElementById('ct-fecha').value = today();
+loadAll().then(subscribeRealtime);
+</script>
+</body>
+</html>
