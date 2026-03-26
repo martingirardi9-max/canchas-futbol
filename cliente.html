@@ -281,11 +281,23 @@ body{font-family:'Syne',sans-serif;background:var(--bg);color:var(--text);min-he
     </div>
     <span class="modal-lbl">Fecha</span>
     <input type="date" id="ct-fecha"/>
-    <span class="modal-lbl">Estado inicial</span>
-    <select id="ct-estado">
-      <option value="lleno">Completo (lleno)</option>
-      <option value="disponible">Con lugares disponibles</option>
-    </select>
+    <div id="ct-lugares-wrap">
+      <span class="modal-lbl">¿Cuántos lugares ofrecés?</span>
+      <select id="ct-lugares">
+        <option value="1">1 lugar libre</option>
+        <option value="2">2 lugares libres</option>
+        <option value="3">3 lugares libres</option>
+        <option value="4" selected>4 lugares libres</option>
+        <option value="5">5 lugares libres</option>
+        <option value="6">6 lugares libres</option>
+        <option value="7">7 lugares libres</option>
+        <option value="8">8 lugares libres</option>
+        <option value="9">9 lugares libres</option>
+        <option value="10">10 lugares libres</option>
+        <option value="11">11 lugares libres</option>
+        <option value="12">12 lugares libres</option>
+      </select>
+    </div>
     <div class="modal-row">
       <button class="modal-cancel" onclick="closeModal('modal-ct')">Cancelar</button>
       <button class="modal-ok" onclick="confirmarClienteTurno()">Crear turno</button>
@@ -542,7 +554,7 @@ async function confirmarClienteTurno() {
   const cancha_id = document.getElementById('ct-cancha').value;
   const hora = document.getElementById('ct-hora').value;
   const fecha = document.getElementById('ct-fecha').value;
-  const estado = document.getElementById('ct-estado').value;
+  const estado = 'disponible';
   if (!nombre || !hora || !fecha) { toast('Completá todos los campos', 'err'); return; }
   if (!telefono) { toast('Ingresá tu teléfono para poder cancelar el turno después', 'inf'); document.getElementById('ct-telefono').focus(); return; }
 
@@ -557,8 +569,25 @@ async function confirmarClienteTurno() {
   const dias = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
   const d = new Date(fecha + 'T00:00:00');
   const nombreTurno = `${nombre} — ${dias[d.getDay()]} ${hora}`;
-  const { error } = await sb.from('turnos').insert({ cancha_id, fecha, hora: horaStr, nombre: nombreTurno, tipo: 'ocasional', estado, telefono_owner: telefono });
+
+  // Insertar turno
+  const { data: turnoData, error } = await sb.from('turnos').insert({ cancha_id, fecha, hora: horaStr, nombre: nombreTurno, tipo: 'ocasional', estado, telefono_owner: telefono }).select().single();
   if (error) { toast('Error: ' + error.message, 'err'); return; }
+
+  // Insertar reservas fantasma para los lugares ocupados
+  if (turnoData) {
+    const cancha = state.canchas.find(c => c.id === cancha_id);
+    const maxJug = cancha?.max_jugadores || 12;
+    const lugaresLibres = parseInt(document.getElementById('ct-lugares').value);
+    const lugaresOcupados = maxJug - lugaresLibres;
+    if (lugaresOcupados > 0) {
+      const reservasFantasma = Array.from({length: lugaresOcupados}, (_, i) => ({
+        turno_id: turnoData.id, nombre: `Reservado ${i+1}`, origen: 'admin'
+      }));
+      await sb.from('reservas').insert(reservasFantasma);
+    }
+  }
+
   closeModal('modal-ct');
   toast('Turno creado ✓ Guardá tu teléfono para cancelarlo si necesitás.', 'ok');
   await refreshTurnos();
