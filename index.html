@@ -100,8 +100,15 @@ body{font-family:'Syne',sans-serif;background:var(--bg);color:var(--text);min-he
 .btn-res:disabled{background:rgba(255,255,255,0.06);color:var(--muted);cursor:not-allowed}
 .btn-baj{padding:9px 12px;background:var(--danger-bg);border:1px solid rgba(239,68,68,0.22);border-radius:var(--r-sm);color:#fca5a5;font-size:12px;font-weight:700;font-family:'Syne',sans-serif;cursor:pointer;transition:all .18s;white-space:nowrap}
 .btn-baj:hover{background:rgba(239,68,68,0.16)}
-.btn-wa{display:flex;align-items:center;justify-content:center;gap:5px;padding:7px 12px;border-radius:var(--r-sm);margin-top:7px;background:rgba(37,211,102,0.07);border:1px solid rgba(37,211,102,0.2);color:#5de891;font-size:11px;font-weight:700;font-family:'DM Mono',monospace;text-decoration:none;width:100%;cursor:pointer;text-align:center;transition:all .18s}
-.btn-wa:hover{background:rgba(37,211,102,0.14)}
+.btn-wa{display:flex;align-items:center;justify-content:center;gap:6px;padding:9px 12px;border-radius:var(--r-sm);margin-top:7px;background:rgba(37,211,102,0.1);border:1px solid rgba(37,211,102,0.25);color:#5de891;font-size:12px;font-weight:700;font-family:'Syne',sans-serif;text-decoration:none;width:100%;cursor:pointer;text-align:center;transition:all .18s}
+.btn-wa:hover{background:rgba(37,211,102,0.18);border-color:rgba(37,211,102,0.4)}
+.btn-wa.disabled{background:rgba(255,255,255,0.03);border-color:var(--border);color:var(--muted);pointer-events:none;cursor:not-allowed}
+.wa-icon{width:15px;height:15px;flex-shrink:0}
+.libre-badge{display:inline-flex;align-items:center;gap:5px;background:rgba(45,158,82,0.12);border:1px solid rgba(45,158,82,0.28);border-radius:20px;padding:3px 10px;font-size:11px;font-weight:700;font-family:'DM Mono',monospace;color:#6ee49a;margin-bottom:9px}
+.libre-badge.urgente{background:rgba(245,158,11,0.1);border-color:rgba(245,158,11,0.3);color:#fcd34d}
+.libre-badge-dot{width:6px;height:6px;border-radius:50%;background:#3dbb63;animation:blink 2s infinite}
+.libre-badge.urgente .libre-badge-dot{background:#f59e0b}
+.lleno-badge{display:flex;align-items:center;justify-content:center;gap:6px;padding:8px;border-radius:var(--r-sm);margin-top:7px;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);color:#fca5a5;font-size:12px;font-weight:700;font-family:'Syne',sans-serif}
 .tc-admin{border-top:1px solid var(--border);padding:9px 15px;background:rgba(245,158,11,0.03);display:flex;gap:6px;flex-wrap:wrap;align-items:center}
 .adm-btn{padding:5px 10px;border-radius:6px;font-size:10px;font-weight:700;font-family:'DM Mono',monospace;cursor:pointer;border:1px solid;text-transform:uppercase;letter-spacing:.3px;transition:all .15s}
 .adm-add{background:var(--success-bg);border-color:rgba(45,158,82,0.3);color:#6ee49a}
@@ -168,9 +175,83 @@ body{font-family:'Syne',sans-serif;background:var(--bg);color:var(--text);min-he
   .pbar-input{width:100%}
   .fab{width:calc(100% - 32px)}
 }
+
+.welcome-screen{position:fixed;inset:0;background:#080c08;z-index:400;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 20px;font-family:'Syne',sans-serif;transition:opacity .3s}
+.welcome-screen.hidden{opacity:0;pointer-events:none}
+.welcome-logo-row{display:flex;align-items:center;gap:10px;margin-bottom:4px}
+.welcome-ball{width:40px;height:40px;border-radius:10px;background:var(--grass);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.welcome-logo-txt{font-size:19px;font-weight:800;color:var(--text);letter-spacing:-0.3px}
+.welcome-sub{font-size:10px;color:var(--muted);font-family:'DM Mono',monospace;letter-spacing:1px;margin-bottom:24px;text-align:center}
+.welcome-pbar{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:11px 16px;width:100%;max-width:340px;margin-bottom:22px;display:flex;align-items:center;gap:10px}
+.welcome-pbar label{font-size:11px;color:var(--muted);font-family:'DM Mono',monospace;white-space:nowrap}
+.welcome-pbar input{background:transparent;border:none;outline:none;color:var(--text);font-family:'Syne',sans-serif;font-size:13px;font-weight:600;flex:1;min-width:0}
+.welcome-pbar input::placeholder{color:#2a3a2a}
+.welcome-q{font-size:11px;color:var(--muted2);font-family:'DM Mono',monospace;margin-bottom:16px;letter-spacing:.3px;text-align:center;text-transform:uppercase}
+.welcome-opts{display:flex;flex-direction:column;gap:9px;width:100%;max-width:340px}
+.welcome-opt{display:flex;align-items:center;gap:14px;background:var(--card);border:1px solid var(--border);border-radius:var(--r-lg);padding:15px 17px;cursor:pointer;transition:all .18s;text-align:left;width:100%}
+.welcome-opt:hover{transform:translateY(-1px)}
+.welcome-opt.wopt-green:hover{border-color:rgba(45,158,82,0.5);background:rgba(45,158,82,0.07)}
+.welcome-opt.wopt-blue:hover{border-color:rgba(59,130,246,0.5);background:rgba(59,130,246,0.06)}
+.welcome-opt.wopt-amber:hover{border-color:rgba(245,158,11,0.5);background:rgba(245,158,11,0.05)}
+.welcome-opt-icon{width:40px;height:40px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.wopt-green .welcome-opt-icon{background:rgba(45,158,82,0.13)}
+.wopt-blue .welcome-opt-icon{background:rgba(59,130,246,0.1)}
+.wopt-amber .welcome-opt-icon{background:rgba(245,158,11,0.08)}
+.welcome-opt-body{flex:1}
+.welcome-opt-title{font-size:14px;font-weight:700;color:var(--text);margin-bottom:3px}
+.welcome-opt-desc{font-size:11px;color:var(--muted);font-family:'DM Mono',monospace;line-height:1.4}
+.welcome-opt-arrow{font-size:18px;color:#374741;flex-shrink:0;transition:color .18s}
+.welcome-opt:hover .welcome-opt-arrow{color:var(--muted2)}
+
 </style>
 </head>
 <body>
+
+<!-- PANTALLA BIENVENIDA -->
+<div class="welcome-screen" id="welcome-screen">
+  <div class="welcome-logo-row">
+    <div class="welcome-ball">⚽</div>
+    <div class="welcome-logo-txt">Canchas</div>
+  </div>
+  <div class="welcome-sub">RESERVAS EN VIVO</div>
+
+  <div class="welcome-pbar">
+    <label>Tu nombre:</label>
+    <input type="text" id="welcome-name" placeholder="Escribí tu nombre..." maxlength="30" autocomplete="off"/>
+  </div>
+
+  <div class="welcome-q">¿Qué querés hacer?</div>
+
+  <div class="welcome-opts">
+    <button class="welcome-opt wopt-green" onclick="welcomeGo('reservar')">
+      <div class="welcome-opt-icon">📋</div>
+      <div class="welcome-opt-body">
+        <div class="welcome-opt-title">Reservar un turno</div>
+        <div class="welcome-opt-desc">Pedí una cancha para tu grupo completo</div>
+      </div>
+      <div class="welcome-opt-arrow">›</div>
+    </button>
+
+    <button class="welcome-opt wopt-blue" onclick="welcomeGo('sumarme')">
+      <div class="welcome-opt-icon">➕</div>
+      <div class="welcome-opt-body">
+        <div class="welcome-opt-title">Sumarme a un turno</div>
+        <div class="welcome-opt-desc">Anotate en turnos con lugares disponibles</div>
+      </div>
+      <div class="welcome-opt-arrow">›</div>
+    </button>
+
+    <button class="welcome-opt wopt-amber" onclick="welcomeGo('admin')">
+      <div class="welcome-opt-icon">🔧</div>
+      <div class="welcome-opt-body">
+        <div class="welcome-opt-title">Admin</div>
+        <div class="welcome-opt-desc">Gestión de canchas y turnos</div>
+      </div>
+      <div class="welcome-opt-arrow">›</div>
+    </button>
+  </div>
+</div>
+
 
 <div class="header">
   <div class="header-inner">
@@ -344,9 +425,18 @@ body{font-family:'Syne',sans-serif;background:var(--bg);color:var(--text);min-he
   <div class="modal">
     <h2>🗑️ Eliminar turno</h2>
     <p id="modal-del-info"></p>
+    <div id="modal-del-serie" style="display:none;margin-bottom:12px;padding:10px 12px;background:rgba(245,158,11,0.07);border:1px solid rgba(245,158,11,0.2);border-radius:var(--r-sm)">
+      <div style="font-size:11px;font-weight:700;color:#fcd34d;font-family:'DM Mono',monospace;margin-bottom:8px;text-transform:uppercase;letter-spacing:.4px">⚡ Este turno es parte de una serie fija</div>
+      <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted2);cursor:pointer;margin-bottom:6px">
+        <input type="radio" name="del-scope" value="uno" checked style="accent-color:var(--grass)"/> Solo este turno
+      </label>
+      <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted2);cursor:pointer">
+        <input type="radio" name="del-scope" value="serie" style="accent-color:#f59e0b"/> Toda la serie (turnos futuros sin reservas)
+      </label>
+    </div>
     <div class="modal-row">
       <button class="modal-cancel" onclick="closeModal('modal-del')">Cancelar</button>
-      <button class="modal-ok danger" onclick="confirmarEliminar()">Eliminar definitivamente</button>
+      <button class="modal-ok danger" onclick="confirmarEliminar()">Eliminar</button>
     </div>
   </div>
 </div>
@@ -485,10 +575,12 @@ function renderCard(t) {
     else actions=`<button class="btn-res" disabled>Turno lleno</button>`;
   } else actions=`<button class="btn-res" disabled>Turno cancelado</button>`;
 
-  const waMsg=!lleno&&!cancel
-    ?encodeURIComponent(`Hola! Quiero anotarme al turno del ${fmtDate(t.fecha)} a las ${t.hora.slice(0,5)} en ${t.cancha_nombre}. Mi nombre: `)
-    :encodeURIComponent(`Hola! Me interesa el turno del ${fmtDate(t.fecha)} a las ${t.hora.slice(0,5)} en ${t.cancha_nombre}. `);
-  const waBtn=`<a class="btn-wa" href="https://wa.me/${WA_NUMBER}?text=${waMsg}" target="_blank" rel="noopener">${!lleno&&!cancel?'📲 Pedir lugar por WhatsApp':'📲 Consultar por WhatsApp'}</a>`;
+  const waMsg=encodeURIComponent(`Hola! Quiero jugar el ${fmtDate(t.fecha)} a las ${t.hora.slice(0,5)} en ${t.cancha_nombre}. Mi nombre: `);
+  const waIcon=`<svg style="width:15px;height:15px;flex-shrink:0" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.127.558 4.126 1.532 5.859L.057 23.428a.5.5 0 0 0 .609.61l5.733-1.498A11.952 11.952 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22c-1.885 0-3.651-.518-5.162-1.418l-.371-.22-3.849 1.006 1.028-3.735-.242-.386A9.96 9.96 0 0 1 2 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z"/></svg>`;
+  const libresLabel=!lleno&&!cancel&&libre>0?`<div class="libre-badge${urgente?' urgente':''}"><div class="libre-badge-dot"></div>${libre} lugar${libre!==1?'es':''} libre${libre!==1?'s':''}</div>`:'';
+  const waBtn=!lleno&&!cancel
+    ?`<a class="btn-wa" href="https://wa.me/${WA_NUMBER}?text=${waMsg}" target="_blank" rel="noopener">${waIcon} Quiero jugar</a>`
+    :`<div class="lleno-badge">🔴 Turno completo</div>`;
 
   let adminStrip='';
   if(state.isAdmin){
@@ -516,6 +608,7 @@ function renderCard(t) {
       <div class="slots">${slots}</div>
       <div class="slots-info"><strong>${count}/${max}</strong> jugadores</div>
       <div class="pills">${pills}</div>
+      ${libresLabel}
       <div class="tc-actions">${actions}</div>
       ${waBtn}
     </div>
@@ -610,17 +703,42 @@ async function reactTurno(id){
 function openDel(turnoId) {
   pendingDel=turnoId;
   const t=state.turnos.find(x=>x.id===turnoId);
+  const esFijo=t?.tipo==='fijo'&&t?.recurrencia_id;
   document.getElementById('modal-del-info').textContent=
     `¿Eliminar "${t?.nombre}"? Se borran también todos los jugadores anotados. No se puede deshacer.`;
+  const seriePanel=document.getElementById('modal-del-serie');
+  seriePanel.style.display=esFijo?'block':'none';
+  if(esFijo){
+    document.querySelector('input[name="del-scope"][value="uno"]').checked=true;
+  }
   document.getElementById('modal-del').style.display='flex';
 }
 async function confirmarEliminar() {
-  const {error}=await sb.from('turnos').delete().eq('id',pendingDel);
-  if(error){toast('Error al eliminar: '+error.message,'err');return;}
-  closeModal('modal-del');
-  state.turnos=state.turnos.filter(t=>t.id!==pendingDel);
-  render(); updateBadges();
-  toast('Turno eliminado','ok');
+  const t=state.turnos.find(x=>x.id===pendingDel);
+  const scope=document.querySelector('input[name="del-scope"]:checked')?.value||'uno';
+  if(scope==='serie'&&t?.recurrencia_id){
+    // Eliminar todos los turnos futuros de la serie sin reservas
+    const hoy=today();
+    const turnosSerie=state.turnos.filter(x=>x.recurrencia_id===t.recurrencia_id&&x.fecha>=hoy&&x.jugadores.length===0);
+    const ids=turnosSerie.map(x=>x.id);
+    if(ids.length>0){
+      const {error}=await sb.from('turnos').delete().in('id',ids);
+      if(error){toast('Error al eliminar serie: '+error.message,'err');return;}
+    }
+    // Desactivar la serie también
+    await sb.from('series_recurrentes').update({activa:false}).eq('id',t.recurrencia_id);
+    closeModal('modal-del');
+    state.turnos=state.turnos.filter(x=>!ids.includes(x.id));
+    render(); updateBadges();
+    toast(`Serie eliminada — ${ids.length} turno${ids.length!==1?'s':''} sin reservas borrado${ids.length!==1?'s':''}. Los turnos con jugadores se conservan.`,'ok');
+  } else {
+    const {error}=await sb.from('turnos').delete().eq('id',pendingDel);
+    if(error){toast('Error al eliminar: '+error.message,'err');return;}
+    closeModal('modal-del');
+    state.turnos=state.turnos.filter(x=>x.id!==pendingDel);
+    render(); updateBadges();
+    toast('Turno eliminado','ok');
+  }
 }
 
 // ADMIN — CREAR TURNO
@@ -723,7 +841,42 @@ function esc(s){return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&l
 function estadoLabel(e){return e==='disponible'?'Disponible':e==='lleno'?'Lleno':'Cancelado';}
 function fmtDate(str){if(!str)return'';const[y,m,d]=str.split('-');const date=new Date(parseInt(y),parseInt(m)-1,parseInt(d));const dias=['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];const meses=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];const t=today(),tm=new Date(Date.now()+86400000).toISOString().split('T')[0];if(str===t)return`HOY · ${parseInt(d)} ${meses[parseInt(m)-1]}`;if(str===tm)return`MAÑANA · ${parseInt(d)} ${meses[parseInt(m)-1]}`;return`${dias[date.getDay()]} ${parseInt(d)} ${meses[parseInt(m)-1]}`;}
 
+
+// WELCOME SCREEN
+function initWelcome() {
+  const saved = localStorage.getItem('pname') || '';
+  if (saved) document.getElementById('welcome-name').value = saved;
+  document.getElementById('welcome-name').addEventListener('input', e => {
+    localStorage.setItem('pname', e.target.value.trim());
+  });
+}
+
+function welcomeGo(action) {
+  const nombre = document.getElementById('welcome-name').value.trim();
+  // Sync name to main input
+  if (nombre) {
+    document.getElementById('pname').value = nombre;
+    localStorage.setItem('pname', nombre);
+    document.getElementById('greeting').textContent = `¡Hola, ${nombre}! 👋`;
+  }
+  // Hide welcome with fade
+  const ws = document.getElementById('welcome-screen');
+  ws.style.opacity = '0';
+  ws.style.transition = 'opacity .25s';
+  setTimeout(() => { ws.style.display = 'none'; }, 260);
+
+  if (action === 'reservar') {
+    openClienteTurno();
+  } else if (action === 'sumarme') {
+    setTab('todas');
+    setF('disponibles');
+  } else if (action === 'admin') {
+    openAdminFlow();
+  }
+}
+
 // BOOTSTRAP
+initWelcome();
 const savedName=localStorage.getItem('pname')||'';
 if(savedName)document.getElementById('pname').value=savedName;
 document.getElementById('pname').addEventListener('input',e=>{const n=e.target.value.trim();localStorage.setItem('pname',n);document.getElementById('greeting').textContent=n?`¡Hola, ${n}! 👋`:'';render();updateBadges();});
