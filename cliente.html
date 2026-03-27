@@ -357,9 +357,11 @@ function welcomeGo(action) {
   const ws = document.getElementById('welcome-screen');
   ws.style.opacity = '0';
   ws.style.transition = 'opacity .25s';
-  setTimeout(() => { ws.style.display = 'none'; }, 260);
-  if (action === 'reservar') openClienteTurno();
-  else if (action === 'sumarme') { setTab('todas'); setF('disponibles'); }
+  setTimeout(() => {
+    ws.style.display = 'none';
+    if (action === 'reservar') openClienteTurno();
+    else if (action === 'sumarme') { setTab('todas'); setF('disponibles'); }
+  }, 270);
 }
 
 // ── SUPABASE ──────────────────────────────────────────────────────────────────
