@@ -284,11 +284,6 @@ body{font-family:'Syne',sans-serif;background:var(--bg);color:var(--text);min-he
             <input class="form-input" id="s-hora" type="time" value="20:00"/>
           </div>
         </div>
-        <div class="form-lbl">Estado inicial de cada turno</div>
-        <select class="form-select" id="s-estado">
-          <option value="lleno">Completo (lleno)</option>
-          <option value="disponible">Con lugares disponibles</option>
-        </select>
         <div class="form-lbl">Generar semanas adelante</div>
         <select class="form-select" id="s-semanas">
           <option value="4" selected>4 semanas</option>
@@ -633,14 +628,13 @@ async function addSerie(){
   const dia=parseInt(document.getElementById('s-dia').value);
   const hora=document.getElementById('s-hora').value;
   const semanas=parseInt(document.getElementById('s-semanas').value);
-  const estado=document.getElementById('s-estado').value;
   if(!nombre||!hora){toast('Completá todos los campos','err');return;}
   const serieId=`${cancha_id}-d${dia}-${hora.replace(':','')}`;
   const {error:se}=await sb.from('series_recurrentes').upsert({id:serieId,cancha_id,nombre,dia_semana:dia,hora:hora+':00',activa:true});
   if(se){toast('Error: '+se.message,'err');return;}
   const dias=['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
   const base=new Date(); base.setHours(0,0,0,0);
-  const turnos=[];
+  const turnosData=[];
   for(let w=0;w<semanas;w++){
     const anchor=new Date(base);
     let diff=dia-anchor.getDay(); if(diff<=0) diff+=7;
@@ -648,10 +642,20 @@ async function addSerie(){
     const fechaStr=anchor.toISOString().split('T')[0];
     const exists=state.turnos.find(t=>t.cancha_id===cancha_id&&t.fecha===fechaStr&&t.hora.startsWith(hora)&&t.tipo==='fijo');
     if(exists) continue;
-    turnos.push({cancha_id,fecha:fechaStr,hora:hora+':00',nombre:`${nombre} — ${dias[dia]} ${hora}`,tipo:'fijo',recurrencia_id:serieId,estado});
+    turnosData.push({cancha_id,fecha:fechaStr,hora:hora+':00',nombre:`${nombre} — ${dias[dia]} ${hora}`,tipo:'fijo',recurrencia_id:serieId,estado:'lleno'});
   }
-  if(turnos.length>0){const {error:te}=await sb.from('turnos').insert(turnos);if(te){toast('Error: '+te.message,'err');return;}}
-  toast(`Serie creada — ${turnos.length} turnos generados ✓`,'ok');
+  if(turnosData.length>0){
+    const {data:insertados,error:te}=await sb.from('turnos').insert(turnosData).select();
+    if(te){toast('Error: '+te.message,'err');return;}
+    // Crear reservas fantasma para cada turno generado
+    const cancha=state.canchas.find(c=>c.id===cancha_id);
+    const maxJug=cancha?.max_jugadores||12;
+    const todasReservas=insertados.flatMap(t=>
+      Array.from({length:maxJug},(_,i)=>({turno_id:t.id,nombre:`Reservado ${i+1}`,origen:'admin'}))
+    );
+    if(todasReservas.length>0) await sb.from('reservas').insert(todasReservas);
+  }
+  toast(`Serie creada — ${turnosData.length} turnos generados ✓`,'ok');
   await loadAll();
 }
 
