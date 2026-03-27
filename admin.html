@@ -609,9 +609,12 @@ async function addTurnoAdmin(){
   if(!fecha||!hora||!nombre){toast('Completá todos los campos','err');return;}
   const {data:turnoData,error}=await sb.from('turnos').insert({cancha_id,fecha,hora:hora+':00',nombre,tipo:'ocasional',estado}).select().single();
   if(error){toast('Error: '+error.message,'err');return;}
-  if(estado==='disponible'&&turnoData){
-    const cancha=state.canchas.find(c=>c.id===cancha_id);
-    const maxJug=cancha?.max_jugadores||12;
+  const cancha=state.canchas.find(c=>c.id===cancha_id);
+  const maxJug=cancha?.max_jugadores||12;
+  if(estado==='lleno'&&turnoData){
+    const reservasFantasma=Array.from({length:maxJug},(_,i)=>({turno_id:turnoData.id,nombre:`Reservado ${i+1}`,origen:'admin'}));
+    await sb.from('reservas').insert(reservasFantasma);
+  } else if(estado==='disponible'&&turnoData){
     const lugaresLibres=parseInt(document.getElementById('a-lugares').value);
     const lugaresOcupados=maxJug-lugaresLibres;
     if(lugaresOcupados>0){
