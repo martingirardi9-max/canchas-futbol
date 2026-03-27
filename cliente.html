@@ -561,6 +561,11 @@ async function confirmarCancelOwner() {
 }
 
 // ── SOLICITAR TURNO ───────────────────────────────────────────────────────────
+function toggleLugares() {
+  const estado = document.getElementById('ct-estado').value;
+  document.getElementById('ct-lugares-wrap').style.display = estado === 'disponible' ? 'block' : 'none';
+}
+
 function openClienteTurno() {
   document.getElementById('ct-nombre').value = currentUser.nombre || '';
   document.getElementById('ct-telefono').value = currentUser.telefono || '';
