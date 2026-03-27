@@ -281,7 +281,12 @@ body{font-family:'Syne',sans-serif;background:var(--bg);color:var(--text);min-he
     </div>
     <span class="modal-lbl">Fecha</span>
     <input type="date" id="ct-fecha"/>
-    <div id="ct-lugares-wrap">
+    <span class="modal-lbl">Estado inicial</span>
+    <select id="ct-estado" onchange="toggleLugares()">
+      <option value="lleno">Completo (lleno)</option>
+      <option value="disponible">Con lugares disponibles</option>
+    </select>
+    <div id="ct-lugares-wrap" style="display:none">
       <span class="modal-lbl">¿Cuántos lugares ofrecés?</span>
       <select id="ct-lugares">
         <option value="1">1 lugar libre</option>
