@@ -399,11 +399,12 @@ async function refreshTurnos() {
 // ── RENDER ────────────────────────────────────────────────────────────────────
 function render() {
   const player = currentUser.nombre.toLowerCase();
+  const playerTel = (currentUser.telefono || '').replace(/[\s\-\+]/g,'');
   const selDate = document.getElementById('fdate').value;
   const content = document.getElementById('content');
   let list = state.turnos.filter(t => {
     if (['c1','c2','c3'].includes(state.tab) && t.cancha_id !== state.tab) return false;
-    if (state.tab === 'mis') return player && t.jugadores.some(j => j.nombre.toLowerCase() === player);
+    if (state.tab === 'mis') return player && t.jugadores.some(j => matchJugador(j, player, playerTel));
     if (state.filter === 'disponibles' && t.estado !== 'disponible') return false;
     if (state.filter === 'llenos' && t.estado !== 'lleno') return false;
     if (state.filter === 'fijo' && t.tipo !== 'fijo') return false;
@@ -425,9 +426,10 @@ function render() {
 
 function renderCard(t) {
   const player = currentUser.nombre.toLowerCase();
+  const playerTel = (currentUser.telefono || '').replace(/[\s\-\+]/g,'');
   const max = t.max_jugadores, count = t.jugadores.length, libre = max - count;
   const lleno = t.estado === 'lleno', cancel = t.estado === 'cancelado';
-  const yaAnot = player && t.jugadores.some(j => j.nombre.toLowerCase() === player);
+  const yaAnot = player && t.jugadores.some(j => matchJugador(j, player, playerTel));
   const urgente = !lleno && !cancel && libre <= 2 && libre > 0;
   const colors = { c1:'#22c55e', c2:'#3b82f6', c3:'#f59e0b' };
   const color = colors[t.cancha_id] || '#6b7280';
@@ -435,12 +437,12 @@ function renderCard(t) {
   const slots = Array.from({length:max}, (_,i) => {
     const j = t.jugadores[i];
     if (!j) return `<div class="slot ${t.estado==='lleno'?'ocup':'libre'}"></div>`;
-    const yo = player && j.nombre.toLowerCase() === player;
+    const yo = player && matchJugador(j, player, playerTel);
     return `<div class="slot ${yo?'yo':'ocup'}" title="${esc(j.nombre)}"></div>`;
   }).join('');
 
   const pills = t.jugadores.map(j => {
-    const yo = player && j.nombre.toLowerCase() === player;
+    const yo = player && matchJugador(j, player, playerTel);
     return `<div class="pill ${yo?'yo':''}">${yo?'⭐ ':''}${esc(j.nombre)}</div>`;
   }).join('') || `<span style="font-size:10px;color:var(--muted);font-family:'DM Mono',monospace">Sin reservas</span>`;
 
@@ -492,21 +494,33 @@ function renderCard(t) {
 }
 
 // ── ACCIONES JUGADOR ──────────────────────────────────────────────────────────
+// ── Helper: identificar jugador por nombre + teléfono ─────────────────────────
+function matchJugador(j, playerNombre, playerTel) {
+  if (j.nombre.startsWith('Reservado ')) return false;
+  const sameName = j.nombre.toLowerCase() === playerNombre;
+  if (!playerTel || !j.telefono) return sameName;
+  const jTel = (j.telefono || '').replace(/[\s\-\+]/g,'');
+  return sameName && jTel === playerTel;
+}
+
 async function reservar(turnoId) {
   const nombre = currentUser.nombre;
+  const telefono = currentUser.telefono;
   if (!nombre) { toast('Ingresá tu nombre primero', 'inf'); return; }
   const t = state.turnos.find(x => x.id === turnoId);
   if (!t || t.jugadores.length >= t.max_jugadores) { toast('El turno está lleno', 'err'); return; }
-  const { error } = await sb.from('reservas').insert({ turno_id: turnoId, nombre, origen: 'web' });
+  const { error } = await sb.from('reservas').insert({ turno_id: turnoId, nombre, telefono: telefono||null, origen: 'web' });
   if (error) { toast(error.code === '23505' ? 'Ya estás anotado' : 'Error: ' + error.message, 'err'); return; }
   if (t.jugadores.length + 1 >= t.max_jugadores) await sb.from('turnos').update({ estado: 'lleno' }).eq('id', turnoId);
   toast('¡Reserva confirmada! ✓', 'ok');
 }
 
 async function bajar(turnoId) {
-  const nombre = currentUser.nombre; if (!nombre) return;
+  const nombre = currentUser.nombre;
+  const playerTel = (currentUser.telefono || '').replace(/[\s\-\+]/g,'');
+  if (!nombre) return;
   const t = state.turnos.find(x => x.id === turnoId);
-  const j = t?.jugadores.find(x => x.nombre.toLowerCase() === nombre.toLowerCase());
+  const j = t?.jugadores.find(x => matchJugador(x, nombre.toLowerCase(), playerTel));
   if (!j) { toast('No estás anotado en ese turno', 'err'); return; }
   await sb.from('reservas').delete().eq('id', j.id);
   if (t.estado === 'lleno') await sb.from('turnos').update({ estado: 'disponible' }).eq('id', turnoId);
@@ -608,7 +622,18 @@ async function confirmarClienteTurno() {
 function setTab(tab) { state.tab = tab; document.querySelectorAll('.tab').forEach(el => el.classList.remove('on')); document.getElementById('tab-'+tab)?.classList.add('on'); document.getElementById('fbar').style.display = tab === 'mis' ? 'none' : 'flex'; render(); }
 function setF(f) { state.filter = f; ['todos','disp','llen','fijo','ocas'].forEach(x => document.getElementById('f-'+x)?.classList.remove('on')); const map={todos:'todos',disponibles:'disp',llenos:'llen',fijo:'fijo',ocasional:'ocas'}; document.getElementById('f-'+map[f])?.classList.add('on'); render(); }
 function populateDateFilter() { const sel = document.getElementById('fdate'); const dates = [...new Set(state.turnos.map(t => t.fecha))].sort(); sel.innerHTML = '<option value="">Todos</option>' + dates.map(d => `<option value="${d}">${fmtDate(d)}</option>`).join(''); }
-function updateBadges() { const p = currentUser.nombre.toLowerCase(); ['c1','c2','c3'].forEach(cid => { const n = state.turnos.filter(t => t.cancha_id === cid && t.estado === 'disponible').length; const el = document.getElementById('b'+cid); if(el) el.textContent=n; }); if(p){ const n = state.turnos.filter(t => t.jugadores.some(j => j.nombre.toLowerCase()===p)).length; const el=document.getElementById('bmis'); if(el) el.textContent=n; } }
+function updateBadges() {
+  const p = currentUser.nombre.toLowerCase();
+  const pTel = (currentUser.telefono || '').replace(/[\s\-\+]/g,'');
+  ['c1','c2','c3'].forEach(cid => {
+    const n = state.turnos.filter(t => t.cancha_id === cid && t.estado === 'disponible').length;
+    const el = document.getElementById('b'+cid); if(el) el.textContent=n;
+  });
+  if (p) {
+    const n = state.turnos.filter(t => t.jugadores.some(j => matchJugador(j, p, pTel))).length;
+    const el = document.getElementById('bmis'); if(el) el.textContent=n;
+  }
+}
 function closeModal(id) { document.getElementById(id).style.display = 'none'; }
 function toast(msg, type='inf') { const c=document.getElementById('toasts'); const el=document.createElement('div'); el.className='toast '+type; el.textContent=msg; c.appendChild(el); setTimeout(()=>{ el.style.opacity='0'; el.style.transition='opacity .3s'; setTimeout(()=>el.remove(),300); },3500); }
 function today() { return new Date().toISOString().split('T')[0]; }
@@ -622,6 +647,11 @@ const savedTel = localStorage.getItem('fb5_tel') || '';
 if (savedNombre) {
   document.getElementById('w-nombre').value = savedNombre;
   document.getElementById('w-telefono').value = savedTel;
+  // Restaurar currentUser y saltear pantalla de bienvenida
+  currentUser = { nombre: savedNombre, telefono: savedTel };
+  document.getElementById('pname').value = savedNombre;
+  document.getElementById('greeting').textContent = `¡Hola, ${savedNombre}! 👋`;
+  document.getElementById('welcome-screen').style.display = 'none';
 }
 document.getElementById('ct-fecha').value = today();
 loadAll().then(subscribeRealtime);
